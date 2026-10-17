@@ -1,0 +1,23 @@
+name: 仕事を頼む
+description: チャッピーとクロちゃんへの共通指示
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: やってほしいこと
+      description: 公開の台帳です。秘密情報や顧客情報は書かないでください。
+    validations:
+      required: true
+  - type: dropdown
+    id: owner
+    attributes:
+      label: 担当
+      options:
+        - チャッピーが振り分け
+        - チャッピー
+        - クロちゃん
+  - type: textarea
+    id: conditions
+    attributes:
+      label: 期限と完了条件
+      description: 何ができたら完了かを書いてください。
