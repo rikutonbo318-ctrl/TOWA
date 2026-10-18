@@ -1,0 +1,8 @@
+{
+  "allowed": {
+    "点検-台帳整合": "ここに python -m towa add の出力にある本文sha256 を貼る"
+  },
+  "defaults": ["点検-台帳整合"],
+  "agents": ["チャッピー", "クロちゃん", "代表"],
+  "trusted_logins": ["rikutonbo318-ctrl"]
+}
