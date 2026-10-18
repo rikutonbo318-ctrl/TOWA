@@ -30,11 +30,12 @@ def main(argv=None):
     s.add_argument("job")
     s.add_argument("agent")
     s.add_argument("result")
-    r = sub.add_parser("review", help="別担当が点検する")
+    r = sub.add_parser("review", help="別担当が、提出された成果を照合して点検する")
     r.add_argument("job")
     r.add_argument("reviewer")
     r.add_argument("verdict", choices=["ok", "ng"])
     r.add_argument("reason")
+    r.add_argument("result", help="提出された成果（提出時のハッシュと照合する）")
     h = sub.add_parser("hold", help="保留にする")
     h.add_argument("job")
     h.add_argument("reason")
@@ -62,7 +63,8 @@ def main(argv=None):
         elif args.cmd == "submit":
             job = ledger.submit(args.job, args.agent, args.result)
         elif args.cmd == "review":
-            job = ledger.review(args.job, args.reviewer, args.verdict == "ok", args.reason)
+            job = ledger.review(args.job, args.reviewer, args.verdict == "ok", args.reason,
+                                args.result)
         elif args.cmd == "hold":
             job = ledger.hold(args.job, args.reason)
         else:

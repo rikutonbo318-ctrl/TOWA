@@ -1,7 +1,11 @@
 """共通仕事管理（Python標準ライブラリのみ）。
 
 台帳は追記専用のJSONLイベントログで、各行が直前行のハッシュを持つ。
-再起動時はログを先頭から再生して状態を復元し、改ざん（連鎖の切れ）を検知する。
+再起動時はログを先頭から再生して状態を復元し、連鎖の切れを検知する。
+外部の信頼アンカーはないため、ログ全体を作り直す書換えまでは検知できない。
+
+更新は台帳ごとのロック（fcntl.flock）の中で、最新ログの再読込・検査・追記を行う。
+別のインスタンスや別プロセスが先に更新していれば、その結果を踏まえて検査し直す。
 
 許可の考え方:
 - 仕事を実行してよいかは Policy（人間が管理する設定ファイル）だけが決める。
@@ -9,6 +13,8 @@
 - 許可は本文ハッシュに結び付けるので、本文が編集されると許可は無効になる。
 """
 
+import contextlib
+import fcntl
 import hashlib
 import json
 import os
@@ -81,15 +87,17 @@ class Ledger:
     def __init__(self, path, policy):
         self.path = path
         self.policy = policy
-        self.jobs = {}
-        self.comments = {}  # コメントID -> 本文ハッシュ
-        self.events = []
-        self._last_hash = GENESIS
-        self._replay()
+        self._lock_depth = 0
+        self._load()
 
     # --- 永続化 ---
 
-    def _replay(self):
+    def _load(self):
+        """ログを先頭から再生して状態を作り直す。"""
+        self.jobs = {}
+        self.comments = {}  # コメントID -> {"hash": 本文ハッシュ, "job": 仕事番号}
+        self.events = []
+        self._last_hash = GENESIS
         if not os.path.exists(self.path):
             return
         with open(self.path, encoding="utf-8") as f:
@@ -104,12 +112,34 @@ class Ledger:
                 self.events.append(event)
                 self._last_hash = digest
 
-    def _record(self, kind, **data):
-        event = dict(data, kind=kind, seq=len(self.events) + 1, prev=self._last_hash)
-        digest = sha256(_canonical(event))
+    @contextlib.contextmanager
+    def _locked(self):
+        """ロックを取り、最新ログを読み直してから中の検査・追記を行う。入れ子可。"""
+        if self._lock_depth:
+            self._lock_depth += 1
+            try:
+                yield
+            finally:
+                self._lock_depth -= 1
+            return
         directory = os.path.dirname(self.path)
         if directory:
             os.makedirs(directory, exist_ok=True)
+        with open(self.path + ".lock", "a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            self._lock_depth = 1
+            try:
+                self._load()
+                yield
+            finally:
+                self._lock_depth = 0
+                fcntl.flock(lock, fcntl.LOCK_UN)
+
+    def _record(self, kind, **data):
+        if not self._lock_depth:
+            raise LedgerError("台帳への追記はロック内でのみ行えます")
+        event = dict(data, kind=kind, seq=len(self.events) + 1, prev=self._last_hash)
+        digest = sha256(_canonical(event))
         with open(self.path, "a", encoding="utf-8") as f:
             f.write(_canonical({"event": event, "hash": digest}) + "\n")
             f.flush()
@@ -134,9 +164,24 @@ class Ledger:
                 "result_hash": None,
                 "reviewer": None,
                 "reason": None,
+                "history": [],
+                "needs_new_version": False,
             }
         elif kind == "comment":
-            self.comments[e["comment_id"]] = e["body_hash"]
+            self.comments[e["comment_id"]] = {"hash": e["body_hash"], "job": e["job"]}
+        elif kind == "edit":
+            self.comments[e["comment_id"]] = {"hash": e["body_hash"], "job": e["job"]}
+            job = self.jobs[e["job"]]
+            job["history"].append({"seq": e["seq"], "comment_id": e["comment_id"],
+                                   "old_hash": job["body_hash"], "new_hash": e["body_hash"]})
+            if job["state"] == DONE:
+                # 完了した版はそのまま残し、編集後の本文は別版として扱う
+                job["needs_new_version"] = True
+            else:
+                job["body"] = e["body"]
+                job["body_hash"] = e["body_hash"]
+                job["state"] = HOLD
+                job["reason"] = e["reason"]
         elif kind in ("conflict", "ignored"):
             pass
         else:
@@ -151,46 +196,52 @@ class Ledger:
     def add(self, job_id, title, body, depends_on=(), source="local"):
         """仕事を登録する。同じ本文の再登録は何もしない（再起動・再取得に強い）。"""
         body_hash = sha256(body)
-        existing = self.jobs.get(job_id)
-        if existing:
-            if existing["body_hash"] == body_hash:
-                return existing
-            self._record("conflict", job=job_id, body_hash=body_hash,
-                         reason="同じ仕事番号で本文が異なる")
-            raise DuplicateIdError("仕事番号 %s は別の本文で登録済みです" % job_id)
-        self._record("add", job=job_id, title=title, body=body, body_hash=body_hash,
-                     depends_on=list(depends_on), source=source)
-        return self.jobs[job_id]
+        with self._locked():
+            existing = self.jobs.get(job_id)
+            if existing:
+                if existing["body_hash"] == body_hash:
+                    return existing
+                self._record("conflict", job=job_id, body_hash=body_hash,
+                             reason="同じ仕事番号で本文が異なる")
+                raise DuplicateIdError("仕事番号 %s は別の本文で登録済みです" % job_id)
+            self._record("add", job=job_id, title=title, body=body, body_hash=body_hash,
+                         depends_on=list(depends_on), source=source)
+            return self.jobs[job_id]
 
     def ingest_comment(self, comment, job_id):
         """GitHubコメント（MCP等で取得した辞書）を依頼として記録する。
 
         記録されても許可にはならない。戻り値は (結果, 理由)。
+        本文編集を検知したら、未完了の仕事は編集後の本文に置き換えて保留にする
+        （本文ハッシュが変わるので古い許可は効かない）。完了済みなら別版が必要と記録する。
         """
         cid = str(comment["id"])
         body = comment.get("body") or ""
         login = (comment.get("user") or {}).get("login")
         body_hash = sha256(body)
 
-        if login not in self.policy.trusted_logins:
-            self._record("ignored", comment_id=cid, reason="第三者の指示")
-            return "ignored", "第三者の指示"
-        if any(marker in body for marker in AI_MARKERS):
-            self._record("ignored", comment_id=cid, reason="AIのコメント")
-            return "ignored", "AIのコメント"
-        known = self.comments.get(cid)
-        if known == body_hash:
-            return "duplicate", "取得済み"
-        if known is not None:
-            self._record("comment", comment_id=cid, body_hash=body_hash)
-            job = self.jobs.get(job_id)
-            if job and job["state"] not in (DONE, HOLD):
-                self.hold(job_id, "依頼コメント %s の本文編集を検知" % cid)
-            return "edited", "本文編集を検知"
-        self._record("comment", comment_id=cid, body_hash=body_hash)
-        self.add(job_id, body.strip().splitlines()[0] if body.strip() else job_id, body,
-                 source="github-comment:%s" % cid)
-        return "recorded", "依頼として記録（許可は別途）"
+        with self._locked():
+            if login not in self.policy.trusted_logins:
+                self._record("ignored", comment_id=cid, reason="第三者の指示")
+                return "ignored", "第三者の指示"
+            if any(marker in body for marker in AI_MARKERS):
+                self._record("ignored", comment_id=cid, reason="AIのコメント")
+                return "ignored", "AIのコメント"
+            known = self.comments.get(cid)
+            if known and known["hash"] == body_hash:
+                return "duplicate", "取得済み"
+            if known:
+                target = known["job"]
+                done = self.jobs[target]["state"] == DONE
+                self._record("edit", job=target, comment_id=cid, body=body, body_hash=body_hash,
+                             reason="依頼コメント %s の本文編集を検知" % cid)
+                if done:
+                    return "edited", "完了後の本文編集。別版の仕事として登録が必要"
+                return "edited", "本文編集を検知。編集後の本文で保留（再許可が必要）"
+            self.add(job_id, body.strip().splitlines()[0] if body.strip() else job_id, body,
+                     source="github-comment:%s" % cid)
+            self._record("comment", comment_id=cid, body_hash=body_hash, job=job_id)
+            return "recorded", "依頼として記録（許可は別途）"
 
     # --- 状態遷移 ---
 
@@ -203,71 +254,83 @@ class Ledger:
         if name not in self.policy.agents:
             raise LedgerError("%s は登録された担当ではありません" % name)
 
+    def _check_permitted(self, job):
+        if not self.policy.permits(job):
+            raise LedgerError("%s は許可されていません（未許可・取消し・本文編集後）" % job["id"])
+
     def _ready(self, job):
         return all(self.jobs.get(dep, {}).get("state") == DONE for dep in job["depends_on"])
 
     def claim(self, job_id, agent):
         """受領して実行中にする。同じ担当の二度目の受領は何もしない。"""
         self._check_agent(agent)
-        job = self._job(job_id)
-        if job["state"] == RUNNING and job["owner"] == agent:
-            return job
-        if job["state"] != TODO:
-            raise LedgerError("%s は %s（担当 %s）のため受領できません"
-                              % (job_id, job["state"], job["owner"]))
-        if not self.policy.permits(job):
-            raise LedgerError("%s は許可されていません（未許可または本文編集後）" % job_id)
-        if not self._ready(job):
-            raise LedgerError("%s は依存仕事が完了していません" % job_id)
-        self._record("state", job=job_id, state=RUNNING, owner=agent, reason=None)
-        return job
+        with self._locked():
+            job = self._job(job_id)
+            self._check_permitted(job)
+            if job["state"] == RUNNING and job["owner"] == agent:
+                return job
+            if job["state"] != TODO:
+                raise LedgerError("%s は %s（担当 %s）のため受領できません"
+                                  % (job_id, job["state"], job["owner"]))
+            if not self._ready(job):
+                raise LedgerError("%s は依存仕事が完了していません" % job_id)
+            self._record("state", job=job_id, state=RUNNING, owner=agent, reason=None)
+            return self.jobs[job_id]
 
     def submit(self, job_id, agent, result):
         """成果を提出して点検待ちにする。成果本文はハッシュで保存する。"""
-        job = self._job(job_id)
-        if job["state"] != RUNNING or job["owner"] != agent:
-            raise LedgerError("%s を提出できるのは実行中の担当だけです" % job_id)
         if not result or not result.strip():
             raise LedgerError("成果が空のため提出できません")
-        self._record("state", job=job_id, state=REVIEW, result_hash=sha256(result), reason=None)
-        return job
+        with self._locked():
+            job = self._job(job_id)
+            if job["state"] != RUNNING or job["owner"] != agent:
+                raise LedgerError("%s を提出できるのは実行中の担当だけです" % job_id)
+            self._check_permitted(job)
+            self._record("state", job=job_id, state=REVIEW, result_hash=sha256(result), reason=None)
+            return self.jobs[job_id]
 
-    def review(self, job_id, reviewer, approve, reason, result=None):
-        """別担当が点検する。承認で完了、差し戻しで実行中へ戻る。
+    def review(self, job_id, reviewer, approve, reason, result):
+        """別担当が、提出された成果そのものを照合して点検する。
 
-        result を渡すと提出済みハッシュと照合し、成果のすり替えを検知する。
+        承認で完了、差し戻しで実行中へ戻る。成果が提出時のハッシュと違えば拒否する。
         """
         self._check_agent(reviewer)
-        job = self._job(job_id)
-        if job["state"] != REVIEW or not job["result_hash"]:
-            raise LedgerError("%s は点検待ちではありません" % job_id)
-        if reviewer == job["owner"]:
-            raise LedgerError("自己点検では完了にできません。別担当の点検が必要です")
         if not reason or not reason.strip():
             raise LedgerError("点検理由が必要です")
-        if result is not None and sha256(result) != job["result_hash"]:
-            raise LedgerError("成果が提出時と一致しません")
-        state = DONE if approve else RUNNING
-        self._record("state", job=job_id, state=state, reviewer=reviewer, reason=reason)
-        return job
+        if result is None:
+            raise LedgerError("点検には提出された成果が必要です")
+        with self._locked():
+            job = self._job(job_id)
+            if job["state"] != REVIEW or not job["result_hash"]:
+                raise LedgerError("%s は点検待ちではありません" % job_id)
+            if reviewer == job["owner"]:
+                raise LedgerError("自己点検では完了にできません。別担当の点検が必要です")
+            if sha256(result) != job["result_hash"]:
+                raise LedgerError("成果が提出時と一致しません")
+            self._check_permitted(job)
+            state = DONE if approve else RUNNING
+            self._record("state", job=job_id, state=state, reviewer=reviewer, reason=reason)
+            return self.jobs[job_id]
 
     def hold(self, job_id, reason):
-        job = self._job(job_id)
-        if job["state"] == DONE:
-            raise LedgerError("完了済みの仕事は保留にできません")
         if not reason:
             raise LedgerError("保留理由が必要です")
-        self._record("state", job=job_id, state=HOLD, reason=reason)
-        return job
+        with self._locked():
+            job = self._job(job_id)
+            if job["state"] == DONE:
+                raise LedgerError("完了済みの仕事は保留にできません")
+            self._record("state", job=job_id, state=HOLD, reason=reason)
+            return self.jobs[job_id]
 
     def resume(self, job_id, reason):
-        """保留を未着手に戻す。担当と成果は消える。"""
-        job = self._job(job_id)
-        if job["state"] != HOLD:
-            raise LedgerError("%s は保留ではありません" % job_id)
-        self._record("state", job=job_id, state=TODO, owner=None, result_hash=None,
-                     reviewer=None, reason=reason)
-        return job
+        """保留を未着手に戻す。担当と成果は消える。許可は現在の本文で改めて判定される。"""
+        with self._locked():
+            job = self._job(job_id)
+            if job["state"] != HOLD:
+                raise LedgerError("%s は保留ではありません" % job_id)
+            self._record("state", job=job_id, state=TODO, owner=None, result_hash=None,
+                         reviewer=None, reason=reason)
+            return self.jobs[job_id]
 
     # --- 次作業選択 ---
 
@@ -280,12 +343,13 @@ class Ledger:
         def eligible(job):
             return job["state"] == TODO and self.policy.permits(job) and self._ready(job)
 
-        defaults = set(self.policy.defaults)
-        for job in self.jobs.values():
-            if job["id"] not in defaults and eligible(job):
-                return job
-        for job_id in self.policy.defaults:
-            job = self.jobs.get(job_id)
-            if job and eligible(job):
-                return job
-        return None
+        with self._locked():
+            defaults = set(self.policy.defaults)
+            for job in self.jobs.values():
+                if job["id"] not in defaults and eligible(job):
+                    return job
+            for job_id in self.policy.defaults:
+                job = self.jobs.get(job_id)
+                if job and eligible(job):
+                    return job
+            return None

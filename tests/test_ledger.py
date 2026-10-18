@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import tempfile
 import unittest
@@ -12,6 +13,15 @@ OWNER = "rikutonbo318-ctrl"
 def comment(cid, body, login=OWNER):
     """GitHub MCP の get_comments が返す形のモック。"""
     return {"id": cid, "body": body, "user": {"login": login}}
+
+
+def _claim_worker(path, allowed, agent, start, results):
+    start.wait()
+    try:
+        Ledger(path, Policy(allowed=allowed)).claim("J1", agent)
+        results.put((agent, "ok"))
+    except LedgerError:
+        results.put((agent, "rejected"))
 
 
 class LedgerTest(unittest.TestCase):
@@ -71,18 +81,20 @@ class LedgerTest(unittest.TestCase):
         self.allow("J1", "本文")
         lg.claim("J1", "クロちゃん")
         with self.assertRaises(LedgerError):
-            lg.review("J1", "チャッピー", True, "点検前")  # 提出なし
+            lg.review("J1", "チャッピー", True, "点検前", "成果物")  # 提出なし
         with self.assertRaises(LedgerError):
             lg.submit("J1", "クロちゃん", "  ")  # 空の成果
         lg.submit("J1", "クロちゃん", "成果物")
         self.assertEqual(lg.jobs["J1"]["state"], REVIEW)
         with self.assertRaises(LedgerError):
-            lg.review("J1", "クロちゃん", True, "自己点検")
+            lg.review("J1", "クロちゃん", True, "自己点検", "成果物")
         with self.assertRaises(LedgerError):
-            lg.review("J1", "チャッピー", True, "")  # 理由なし
+            lg.review("J1", "チャッピー", True, "", "成果物")  # 理由なし
         with self.assertRaises(LedgerError):
-            lg.review("J1", "チャッピー", True, "すり替え", result="別の成果")
-        lg.review("J1", "チャッピー", True, "テスト結果を確認", result="成果物")
+            lg.review("J1", "チャッピー", True, "すり替え", "別の成果")
+        with self.assertRaises(LedgerError):
+            lg.review("J1", "チャッピー", True, "成果を見ずに承認", None)
+        lg.review("J1", "チャッピー", True, "テスト結果を確認", "成果物")
         job = self.ledger().jobs["J1"]
         self.assertEqual(job["state"], DONE)
         self.assertEqual(job["result_hash"], sha256("成果物"))
@@ -95,7 +107,7 @@ class LedgerTest(unittest.TestCase):
         self.allow("J1", "本文")
         lg.claim("J1", "クロちゃん")
         lg.submit("J1", "クロちゃん", "成果物")
-        lg.review("J1", "チャッピー", False, "検証結果が不足")
+        lg.review("J1", "チャッピー", False, "検証結果が不足", "成果物")
         self.assertEqual(lg.jobs["J1"]["state"], RUNNING)
 
     def test_hold_and_resume(self):
@@ -140,7 +152,7 @@ class LedgerTest(unittest.TestCase):
         # 人間の仕事が残っていない間は既定allowlistから（未許可のD2は飛ばす）
         self.assertEqual(lg.next_job()["id"], "D1")
         lg.submit("A", "クロちゃん", "完了物")
-        lg.review("A", "チャッピー", True, "確認")
+        lg.review("A", "チャッピー", True, "確認", "完了物")
         self.assertEqual(lg.next_job()["id"], "B")
 
     def test_no_default_outside_allowlist(self):
@@ -182,8 +194,105 @@ class LedgerTest(unittest.TestCase):
         lg.claim("G4", "クロちゃん")
         status, _ = lg.ingest_comment(comment(4, "資料を整理して公開"), "G4")
         self.assertEqual(status, "edited")
-        self.assertEqual(lg.jobs["G4"]["state"], HOLD)
-        self.assertIn("本文編集", lg.jobs["G4"]["reason"])
+        job = self.ledger().jobs["G4"]
+        self.assertEqual(job["state"], HOLD)
+        self.assertIn("本文編集", job["reason"])
+        self.assertEqual(job["body"], "資料を整理して公開")
+        self.assertEqual(job["history"][0]["old_hash"], sha256("資料を整理"))
+
+    def test_edit_then_resume_does_not_reuse_old_permission(self):
+        # チャッピー指摘の再現手順: 古い本文の許可 → 取込み → 編集 → 再開
+        self.allow("J", "old")
+        lg = self.ledger()
+        lg.ingest_comment(comment(10, "old"), "J")
+        lg.ingest_comment(comment(10, "new"), "J")
+        lg.resume("J", "代表が再開")
+        self.assertIsNone(lg.next_job())
+        with self.assertRaises(LedgerError):
+            lg.claim("J", "クロちゃん")
+        # 編集後の本文を代表が改めて許可すれば進められる
+        self.allow("J", "new")
+        self.assertEqual(lg.next_job()["id"], "J")
+
+    def test_edit_while_running_blocks_submit_and_review(self):
+        self.allow("J", "old")
+        lg = self.ledger()
+        lg.ingest_comment(comment(11, "old"), "J")
+        lg.claim("J", "クロちゃん")
+        lg.submit("J", "クロちゃん", "成果")
+        lg.ingest_comment(comment(11, "new"), "J")
+        with self.assertRaises(LedgerError):
+            lg.review("J", "チャッピー", True, "確認", "成果")
+        self.assertEqual(lg.jobs["J"]["state"], HOLD)
+
+    def test_edit_after_done_keeps_done_version_and_flags_new_version(self):
+        self.allow("J", "old")
+        lg = self.ledger()
+        lg.ingest_comment(comment(12, "old"), "J")
+        lg.claim("J", "クロちゃん")
+        lg.submit("J", "クロちゃん", "成果")
+        lg.review("J", "チャッピー", True, "確認", "成果")
+        status, reason = lg.ingest_comment(comment(12, "new"), "J")
+        self.assertEqual(status, "edited")
+        self.assertIn("別版", reason)
+        job = self.ledger().jobs["J"]
+        self.assertEqual((job["state"], job["body"]), (DONE, "old"))
+        self.assertTrue(job["needs_new_version"])
+        self.assertEqual(job["history"][0]["new_hash"], sha256("new"))
+
+    def test_revoked_permission_blocks_all_transitions(self):
+        lg = self.ledger()
+        lg.add("J1", "仕事1", "本文")
+        self.allow("J1", "本文")
+        lg.claim("J1", "クロちゃん")
+        del self.policy.allowed["J1"]
+        with self.assertRaises(LedgerError):
+            lg.claim("J1", "クロちゃん")  # 同じ担当の再受領でも拒否
+        with self.assertRaises(LedgerError):
+            lg.submit("J1", "クロちゃん", "成果")
+        self.allow("J1", "本文")
+        lg.submit("J1", "クロちゃん", "成果")
+        del self.policy.allowed["J1"]
+        with self.assertRaises(LedgerError):
+            lg.review("J1", "チャッピー", True, "確認", "成果")
+        self.assertEqual(lg.jobs["J1"]["state"], REVIEW)
+
+    def test_stale_instance_cannot_double_claim(self):
+        setup = self.ledger()
+        setup.add("J1", "仕事1", "本文")
+        self.allow("J1", "本文")
+        a, b = self.ledger(), self.ledger()  # どちらも未着手の状態を読み込み済み
+        a.claim("J1", "クロちゃん")
+        with self.assertRaises(LedgerError):
+            b.claim("J1", "チャッピー")
+        b.add("J2", "仕事2", "本文2")  # 古いインスタンスからの追記も連鎖を壊さない
+        final = self.ledger()
+        self.assertEqual(final.jobs["J1"]["owner"], "クロちゃん")
+        self.assertEqual([e["seq"] for e in final.events], [1, 2, 3])
+
+    def test_parallel_processes_claim_exactly_once(self):
+        lg = self.ledger()
+        lg.add("J1", "仕事1", "本文")
+        self.allow("J1", "本文")
+        ctx = multiprocessing.get_context("fork")
+        start = ctx.Event()
+        results = ctx.Queue()
+        agents = ["クロちゃん", "チャッピー", "代表"] * 4
+        procs = [ctx.Process(target=_claim_worker,
+                             args=(self.path, self.policy.allowed, agent, start, results))
+                 for agent in agents]
+        for p in procs:
+            p.start()
+        start.set()
+        for p in procs:
+            p.join(30)
+        outcomes = [results.get(timeout=5) for _ in procs]
+        winners = {agent for agent, status in outcomes if status == "ok"}
+        self.assertEqual(len(winners), 1)  # 勝った担当の再受領だけが ok（何もしない）
+        final = self.ledger()  # 連鎖が壊れていれば TamperError
+        self.assertEqual([e["kind"] for e in final.events], ["add", "state"])
+        self.assertEqual(final.jobs["J1"]["state"], RUNNING)
+        self.assertEqual(final.jobs["J1"]["owner"], winners.pop())
 
     def test_tampered_log_is_detected(self):
         lg = self.ledger()
@@ -203,8 +312,9 @@ class LedgerTest(unittest.TestCase):
         self.assertEqual(main(base + ["add", "J1", "仕事1", "本文"]), 0)
         self.assertEqual(main(base + ["claim", "J1", "クロちゃん"]), 0)
         self.assertEqual(main(base + ["submit", "J1", "クロちゃん", "成果"]), 0)
-        self.assertEqual(main(base + ["review", "J1", "クロちゃん", "ok", "自己"]), 1)
-        self.assertEqual(main(base + ["review", "J1", "チャッピー", "ok", "確認"]), 0)
+        self.assertEqual(main(base + ["review", "J1", "クロちゃん", "ok", "自己", "成果"]), 1)
+        self.assertEqual(main(base + ["review", "J1", "チャッピー", "ok", "確認", "違う成果"]), 1)
+        self.assertEqual(main(base + ["review", "J1", "チャッピー", "ok", "確認", "成果"]), 0)
         self.assertEqual(Ledger(self.path, Policy.load(policy_path)).jobs["J1"]["state"], DONE)
 
 
