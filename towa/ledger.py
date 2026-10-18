@@ -96,6 +96,7 @@ class Ledger:
         """ログを先頭から再生して状態を作り直す。"""
         self.jobs = {}
         self.comments = {}  # コメントID -> {"hash": 本文ハッシュ, "job": 仕事番号}
+        self.ignored = {}  # コメントID -> {"hash": 本文ハッシュ, "reason": 理由}
         self.events = []
         self._last_hash = GENESIS
         if not os.path.exists(self.path):
@@ -182,7 +183,9 @@ class Ledger:
                 job["body_hash"] = e["body_hash"]
                 job["state"] = HOLD
                 job["reason"] = e["reason"]
-        elif kind in ("conflict", "ignored"):
+        elif kind == "ignored":
+            self.ignored[e["comment_id"]] = {"hash": e.get("body_hash"), "reason": e["reason"]}
+        elif kind == "conflict":
             pass
         else:
             job = self.jobs[e["job"]]
@@ -208,25 +211,49 @@ class Ledger:
                          depends_on=list(depends_on), source=source)
             return self.jobs[job_id]
 
-    def ingest_comment(self, comment, job_id):
-        """GitHubコメント（MCP等で取得した辞書）を依頼として記録する。
+    @staticmethod
+    def _meta(comment):
+        """GitHubが付けた投稿者情報を残す。App情報のキー自体がない取得経路は「未取得」とする。"""
+        if "performed_via_github_app" in comment:
+            app = comment["performed_via_github_app"]
+            app = {"id": app.get("id"), "slug": app.get("slug")} if app else None
+        else:
+            app = "未取得"
+        return {
+            "login": (comment.get("user") or {}).get("login"),
+            "author_association": comment.get("author_association"),
+            "app": app,
+        }
 
-        記録されても許可にはならない。戻り値は (結果, 理由)。
+    def _ignore(self, cid, body_hash, reason, meta):
+        """無視を記録する。同じ本文・同じ理由の再取得ではログを増やさない。"""
+        if self.ignored.get(cid) == {"hash": body_hash, "reason": reason}:
+            return "ignored", reason
+        self._record("ignored", comment_id=cid, body_hash=body_hash, reason=reason, meta=meta)
+        return "ignored", reason
+
+    def ingest_comment(self, comment, job_id):
+        """GitHubのコメントやIssue（取得した辞書）を依頼候補として記録する。
+
+        記録されても許可にはならない。App情報がないことは人間本人の証明ではなく、
+        依頼候補として扱えるというだけ。戻り値は (結果, 理由)。
+        GitHub App経由の投稿（performed_via_github_app が非null）、AIの印がある投稿、
+        第三者の投稿は無視する。
         本文編集を検知したら、未完了の仕事は編集後の本文に置き換えて保留にする
         （本文ハッシュが変わるので古い許可は効かない）。完了済みなら別版が必要と記録する。
         """
         cid = str(comment["id"])
         body = comment.get("body") or ""
-        login = (comment.get("user") or {}).get("login")
+        meta = self._meta(comment)
         body_hash = sha256(body)
 
         with self._locked():
-            if login not in self.policy.trusted_logins:
-                self._record("ignored", comment_id=cid, reason="第三者の指示")
-                return "ignored", "第三者の指示"
+            if meta["login"] not in self.policy.trusted_logins:
+                return self._ignore(cid, body_hash, "第三者の指示", meta)
+            if isinstance(meta["app"], dict):
+                return self._ignore(cid, body_hash, "GitHub App経由の投稿", meta)
             if any(marker in body for marker in AI_MARKERS):
-                self._record("ignored", comment_id=cid, reason="AIのコメント")
-                return "ignored", "AIのコメント"
+                return self._ignore(cid, body_hash, "AIのコメント", meta)
             known = self.comments.get(cid)
             if known and known["hash"] == body_hash:
                 return "duplicate", "取得済み"
@@ -234,14 +261,14 @@ class Ledger:
                 target = known["job"]
                 done = self.jobs[target]["state"] == DONE
                 self._record("edit", job=target, comment_id=cid, body=body, body_hash=body_hash,
-                             reason="依頼コメント %s の本文編集を検知" % cid)
+                             reason="依頼コメント %s の本文編集を検知" % cid, meta=meta)
                 if done:
                     return "edited", "完了後の本文編集。別版の仕事として登録が必要"
                 return "edited", "本文編集を検知。編集後の本文で保留（再許可が必要）"
             self.add(job_id, body.strip().splitlines()[0] if body.strip() else job_id, body,
                      source="github-comment:%s" % cid)
-            self._record("comment", comment_id=cid, body_hash=body_hash, job=job_id)
-            return "recorded", "依頼として記録（許可は別途）"
+            self._record("comment", comment_id=cid, body_hash=body_hash, job=job_id, meta=meta)
+            return "recorded", "依頼候補として記録（人間本人の証明ではない。許可は別途）"
 
     # --- 状態遷移 ---
 
