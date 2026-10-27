@@ -1,4 +1,4 @@
-"""Instagram リール自動投稿スクリプト（GitHub Actions から毎日 20:30 に呼ばれる）
+"""Instagram リール・カルーセル自動投稿スクリプト（GitHub Actions から毎日 20:30 に呼ばれる）
 
 queue.csv の「予定時刻を過ぎていて、まだ投稿していない行」を1件だけリールとして投稿し、
 posted_at と media_id を書き込む。標準ライブラリだけで動く。
@@ -61,6 +61,15 @@ def create_container(uid, row, caption):
                 caption=caption, share_to_feed='true')['id']
 
 
+def create_carousel(uid, row, caption):
+    """画像を | 区切りで並べた行はカルーセル（JPEG・公開URLから取り込み）"""
+    base = os.environ.get('VIDEO_BASE_URL', '')
+    children = [call('POST', f'{uid}/media', image_url=urllib.parse.urljoin(base, img),
+                     is_carousel_item='true')['id'] for img in row['video'].split('|')]
+    return call('POST', f'{uid}/media', media_type='CAROUSEL', children=','.join(children),
+                caption=caption)['id']
+
+
 def wait_ready(cid):
     for _ in range(40):  # 最大10分
         s = call('GET', cid, fields='status_code,status')
@@ -78,7 +87,10 @@ def check():
     row = next(r for r in csv.DictReader(open(QUEUE, encoding='utf-8')) if not r['posted_at'])
     uid = call('GET', 'me', fields='user_id')['user_id']
     try:
-        cid = create_container(uid, row, 'test')
+        if row['video'].endswith('.jpg'):
+            cid = create_carousel(uid, row, 'test')
+        else:
+            cid = create_container(uid, row, 'test')
     except RuntimeError as e:
         sys.exit(str(e))
     wait_ready(cid)
@@ -104,7 +116,10 @@ def main(dry=False):
         return
     uid = call('GET', 'me', fields='user_id')['user_id']
     try:
-        cid = create_container(uid, row, caption)
+        if row['video'].endswith('.jpg'):
+            cid = create_carousel(uid, row, caption)
+        else:
+            cid = create_container(uid, row, caption)
     except RuntimeError as e:
         sys.exit(str(e))
     wait_ready(cid)
