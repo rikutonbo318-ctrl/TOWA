@@ -4,7 +4,8 @@ queue.csv の「予定時刻を過ぎていて、まだ投稿していない行�
 posted_at と media_id を書き込む。標準ライブラリだけで動く。
 
 必要な環境変数:
-  IG_TOKEN        Instagram の長期アクセストークン（GitHub の Secrets に入れる）
+  IG_APP_SECRET   Instagram アプリシークレット（GitHub の Secrets）。token.enc の鍵にもなる
+  IG_TOKEN        （任意）直接トークンを渡す場合。なければ token.enc から読む
   VIDEO_BASE_URL  動画を置いた公開URLの先頭（アップロードに失敗した時の予備）
 """
 import csv, json, os, sys, time, urllib.parse, urllib.request
@@ -25,8 +26,15 @@ def request(req):
         raise RuntimeError(f'Instagram API エラー {e.code}: {e.read().decode()}')
 
 
+def token():
+    if not os.environ.get('IG_TOKEN'):
+        import ig_token  # 同じフォルダの ig_token.py
+        os.environ['IG_TOKEN'] = ig_token.load()['token']
+    return os.environ['IG_TOKEN']
+
+
 def call(method, path, **params):
-    params['access_token'] = os.environ['IG_TOKEN']
+    params['access_token'] = token()
     data = urllib.parse.urlencode(params)
     url = f'{API}/{path}'
     if method == 'GET':
@@ -42,7 +50,7 @@ def create_container(uid, row, caption):
                  caption=caption, share_to_feed='true')
         body = open(path, 'rb').read()
         req = urllib.request.Request(f"{RUPLOAD}/{c['id']}", data=body, method='POST', headers={
-            'Authorization': f"OAuth {os.environ['IG_TOKEN']}",
+            'Authorization': f"OAuth {token()}",
             'offset': '0', 'file_size': str(len(body))})
         print('アップロード:', request(req))
         return c['id']
@@ -72,7 +80,7 @@ def main(dry=False):
            and datetime.fromisoformat(r['scheduled_jst']).replace(tzinfo=JST) <= now + timedelta(minutes=20)]
     if not due:
         # 投稿がない日もトークンが生きているか確かめる
-        if os.environ.get('IG_TOKEN') and not dry:
+        if not dry:
             print('トークン確認 OK:', call('GET', 'me', fields='username')['username'])
         print('投稿予定なし')
         return
@@ -105,9 +113,4 @@ def main(dry=False):
 
 
 if __name__ == '__main__':
-    if '--refresh-token' in sys.argv:
-        # 長期トークン（60日）の延長。50日ごとに実行して Secrets を更新する
-        print(request(urllib.request.Request('https://graph.instagram.com/refresh_access_token?' + urllib.parse.urlencode(
-            {'grant_type': 'ig_refresh_token', 'access_token': os.environ['IG_TOKEN']}))))
-    else:
-        main(dry='--dry-run' in sys.argv)
+    main(dry='--dry-run' in sys.argv)
