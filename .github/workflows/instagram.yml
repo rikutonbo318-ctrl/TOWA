@@ -1,0 +1,30 @@
+name: Instagram リール投稿
+on:
+  schedule:
+    - cron: '30 11 * * *'   # 日本時間 20:30
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency: instagram-post
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 投稿
+        working-directory: instagram
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          VIDEO_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/instagram/
+        run: |
+          if [ -z "$IG_TOKEN" ]; then echo "IG_TOKEN が未設定です（Settings → Secrets → Actions）"; exit 1; fi
+          python post_reels.py
+      - name: 投稿済みを記録
+        run: |
+          git config user.name "instagram-bot"
+          git config user.email "instagram-bot@users.noreply.github.com"
+          git add instagram/queue.csv
+          git diff --cached --quiet || (git commit -m "Instagram: 投稿済みを記録" && git push)
