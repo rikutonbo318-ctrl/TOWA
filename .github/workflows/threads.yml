@@ -3,6 +3,7 @@ on:
   schedule:
     - cron: '30 22 * * *'   # 日本時間 7:30
     - cron: '30 13 * * *'   # 日本時間 22:30
+    - cron: '30 3 * * *'    # 日本時間 12:30（noteの告知など）
   workflow_dispatch: {}     # 手動実行ボタン（テスト用）
 permissions:
   contents: write
