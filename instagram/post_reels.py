@@ -73,6 +73,18 @@ def wait_ready(cid):
     sys.exit('動画の処理が10分で終わりませんでした')
 
 
+def check():
+    """公開せずに、次の動画をアップロードして処理が通るかだけ確かめる"""
+    row = next(r for r in csv.DictReader(open(QUEUE, encoding='utf-8')) if not r['posted_at'])
+    uid = call('GET', 'me', fields='user_id')['user_id']
+    try:
+        cid = create_container(uid, row, 'test')
+    except RuntimeError as e:
+        sys.exit(str(e))
+    wait_ready(cid)
+    print('確認 OK（公開はしていません）:', row['video'])
+
+
 def main(dry=False):
     rows = list(csv.DictReader(open(QUEUE, encoding='utf-8')))
     now = datetime.now(JST)
@@ -113,4 +125,7 @@ def main(dry=False):
 
 
 if __name__ == '__main__':
-    main(dry='--dry-run' in sys.argv)
+    if '--check' in sys.argv:
+        check()
+    else:
+        main(dry='--dry-run' in sys.argv)
