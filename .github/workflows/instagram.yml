@@ -8,6 +8,10 @@ on:
         description: '初回だけ：ログイン後のGitHubのアドレス（code=…）を貼る'
         required: false
         default: ''
+      check:
+        description: '公開せずに動画のアップロードだけ確かめる'
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency: instagram-post
@@ -32,7 +36,9 @@ jobs:
         env:
           IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
           VIDEO_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/instagram/
-        run: python post_reels.py
+          CHECK: ${{ inputs.check }}
+        run: |
+          if [ "$CHECK" = "true" ]; then python post_reels.py --check; else python post_reels.py; fi
       - name: 投稿済みとトークンを記録
         run: |
           git config user.name "instagram-bot"
