@@ -36,6 +36,9 @@ def main(dry=False):
     due = [r for r in rows if not r['posted_at']
            and datetime.fromisoformat(r['scheduled_jst']).replace(tzinfo=JST) <= now + timedelta(minutes=20)]
     if not due:
+        # 投稿がない回もトークンが生きているか確かめる
+        if os.environ.get('THREADS_TOKEN') and not dry:
+            print('トークン確認 OK:', call('GET', 'me', fields='username')['username'])
         print('投稿予定なし')
         return
     row = due[0]
