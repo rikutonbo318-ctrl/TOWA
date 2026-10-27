@@ -2,7 +2,12 @@ name: Instagram リール投稿
 on:
   schedule:
     - cron: '30 11 * * *'   # 日本時間 20:30
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      code:
+        description: '初回だけ：ログイン後のGitHubのアドレス（code=…）を貼る'
+        required: false
+        default: ''
 permissions:
   contents: write
 concurrency: instagram-post
@@ -14,17 +19,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: トークン準備
+        working-directory: instagram
+        env:
+          IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
+          CODE: ${{ inputs.code }}
+        run: |
+          if [ -z "$IG_APP_SECRET" ]; then echo "IG_APP_SECRET が未設定です（Settings → Secrets → Actions）"; exit 1; fi
+          if [ -n "$CODE" ]; then python ig_token.py exchange "$CODE"; else python ig_token.py refresh; fi
       - name: 投稿
         working-directory: instagram
         env:
-          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
           VIDEO_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/instagram/
-        run: |
-          if [ -z "$IG_TOKEN" ]; then echo "IG_TOKEN が未設定です（Settings → Secrets → Actions）"; exit 1; fi
-          python post_reels.py
-      - name: 投稿済みを記録
+        run: python post_reels.py
+      - name: 投稿済みとトークンを記録
         run: |
           git config user.name "instagram-bot"
           git config user.email "instagram-bot@users.noreply.github.com"
-          git add instagram/queue.csv
-          git diff --cached --quiet || (git commit -m "Instagram: 投稿済みを記録" && git push)
+          git add -A instagram/
+          git diff --cached --quiet || (git commit -m "Instagram: 投稿済み・トークンを記録" && git push)
