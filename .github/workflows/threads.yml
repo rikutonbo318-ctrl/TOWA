@@ -30,4 +30,4 @@ jobs:
           git config user.name "threads-bot"
           git config user.email "threads-bot@users.noreply.github.com"
           git add threads/queue.csv
-          git diff --cached --quiet || (git commit -m "Threads: 投稿済みを記録" && git push)
+          git diff --cached --quiet || (git commit -m "Threads: 投稿済みを記録" && for i in 1 2 3 4 5; do git pull --rebase -q origin main && git push && break; sleep 5; done)
