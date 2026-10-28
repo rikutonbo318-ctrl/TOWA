@@ -12,6 +12,7 @@ from post_reels import HERE, QUEUE, call
 JST = timezone(timedelta(hours=9))
 STATS = os.path.join(HERE, 'stats.csv')
 LATEST = os.path.join(HERE, 'stats_latest.md')
+FOLLOW = os.path.join(HERE, 'followers.csv')
 FIELDS = ['date', 'media_id', 'video', 'posted_at', 'likes', 'comments', 'views', 'reach', 'saved', 'shares', 'interactions', 'avg_watch_ms']
 REEL_METRICS = 'views,reach,saved,shares,total_interactions,ig_reels_avg_watch_time'
 POST_METRICS = 'views,reach,saved,shares,total_interactions'
@@ -52,7 +53,18 @@ def main():
         except (TypeError, ValueError):
             return 0.0
 
-    lines = [f'# Instagram の数字（{today} 時点）', '',
+    # フォロワー数（リールのギフトは500人から）。1日1行
+    fc = call('GET', 'me', fields='followers_count').get('followers_count', '')
+    hist = [r for r in csv.DictReader(open(FOLLOW, encoding='utf-8')) if r['date'] != today] if os.path.exists(FOLLOW) else []
+    hist.append({'date': today, 'followers': fc})
+    with open(FOLLOW, 'w', encoding='utf-8', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=['date', 'followers'])
+        w.writeheader()
+        w.writerows(hist)
+    prev = hist[-2]['followers'] if len(hist) > 1 else ''
+    diff = f'（前回 {prev} 人から {int(fc) - int(prev):+d}）' if str(prev).isdigit() and str(fc).isdigit() else ''
+
+    lines = [f'# Instagram の数字（{today} 時点）', '', f'**フォロワー {fc} 人**{diff}' + ('　→ 500人を超えました（リールのギフトをオンにできます）' if str(fc).isdigit() and int(fc) >= 500 else ''), '',
              '| 投稿 | 投稿日時 | 再生 | リーチ | 保存 | シェア | いいね | コメント | 平均視聴(秒) | 保存率 |',
              '|---|---|---|---|---|---|---|---|---|---|']
     for r in sorted(new, key=lambda r: -num(r['views'] or r['likes'])):
