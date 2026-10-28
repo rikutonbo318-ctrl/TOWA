@@ -78,7 +78,7 @@ def pick_music(uid):
     return items[0] if items else None
 
 
-def create_with_music(fb, row, caption):
+def create_with_music(fb, row, caption, log=True):
     """Facebookログイン版のAPIで、流行りの曲を付けたリールの下書きを作る"""
     global API
     API = 'https://graph.facebook.com/v21.0'
@@ -90,6 +90,9 @@ def create_with_music(fb, row, caption):
     url = urllib.parse.urljoin(os.environ.get('VIDEO_BASE_URL', ''), row['video'])
     cid = call('POST', f'{uid}/media', media_type='REELS', video_url=url, caption=caption, share_to_feed='true',
                audio_configuration=json.dumps({'audio_id': a['id'], 'audio_volume': MUSIC_VOLUME, 'video_volume': VIDEO_VOLUME}))['id']
+    if not log:
+        print('曲を付けました（確認用）:', a.get('title'), a.get('id'))
+        return uid, cid
     new = not os.path.exists(AUDIO_LOG)
     with open(AUDIO_LOG, 'a', encoding='utf-8', newline='') as f:
         w = csv.DictWriter(f, fieldnames=['date', 'video', 'audio_id', 'title', 'artist'])
@@ -137,6 +140,13 @@ def wait_ready(cid, soft=False):
 def check():
     """公開せずに、次の動画をアップロードして処理が通るかだけ確かめる"""
     row = next(r for r in csv.DictReader(open(QUEUE, encoding='utf-8')) if not r['posted_at'])
+    import fb_token
+    fb = fb_token.load()
+    if fb and not row['video'].endswith('.jpg'):
+        _, cid = create_with_music(fb, row, 'test', log=False)
+        wait_ready(cid)
+        print('確認 OK・流行りの曲つき（公開はしていません）:', row['video'])
+        return
     uid = call('GET', 'me', fields='user_id')['user_id']
     try:
         if row['video'].endswith('.jpg'):
