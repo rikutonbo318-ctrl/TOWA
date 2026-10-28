@@ -60,7 +60,7 @@ export const Ep04: React.FC = () => {
     ins = {x: W + 2.6 - 1.2 * ramp(f, 40, 90), y: -3.2 + 1.6 * ramp(f, 40, 90), yaw: 120, act: f > 40 && f < 90 ? 'walk' : 'idle'};
     kan = {x: W + 0.6, y: -0.8, yaw: 300, act: f > 92 ? 'wave' : 'idle'};
   } else if (f < 172) {
-    ins = {x: 3.2, y: 0.8, h: SUTE_TOP, yaw: 90, act: 'measure'};
+    ins = {x: 2.2, y: 1.25, h: SUTE_TOP, yaw: 300, act: 'measure'};
     kan = {x: 2.2, y: -0.6, yaw: 60, act: 'idle'};
   } else if (f < 236) {
     ins = {x: 1.4, y: 0.7, h: SUTE_TOP, yaw: 270, act: 'press'};
