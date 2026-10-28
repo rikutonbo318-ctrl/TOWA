@@ -25,6 +25,7 @@ def http(url, data=None):
 
 
 def openssl(args, data):
+    os.environ['FB_APP_SECRET_KEY'] = os.environ['FB_APP_SECRET'].strip()
     return subprocess.run(['openssl', 'enc', '-aes-256-cbc', '-pbkdf2', '-pass', 'env:FB_APP_SECRET', *args],
                           input=data, capture_output=True, check=True).stdout
 
@@ -55,7 +56,14 @@ def url():
 
 def exchange(code):
     code = code.split('code=')[-1].split('#')[0].split('&')[0]
-    secret = os.environ['FB_APP_SECRET']
+    secret = os.environ['FB_APP_SECRET'].strip()
+    if len(secret) != 32 or any(ch not in '0123456789abcdef' for ch in secret):
+        sys.exit(f'FB_APP_SECRET の形がちがいます（{len(secret)}文字）。Metaの app secret は英数字32文字です')
+    try:
+        http(f'{GRAPH}/oauth/access_token?' + urllib.parse.urlencode({
+            'client_id': APP_ID, 'client_secret': secret, 'grant_type': 'client_credentials'}))
+    except RuntimeError:
+        sys.exit('FB_APP_SECRET が uzumaki-threads-poster（%s）の app secret と一致しません' % APP_ID)
     short = http(f'{GRAPH}/oauth/access_token?' + urllib.parse.urlencode({
         'client_id': APP_ID, 'client_secret': secret, 'redirect_uri': REDIRECT, 'code': code}))['access_token']
     long = http(f'{GRAPH}/oauth/access_token?' + urllib.parse.urlencode({
