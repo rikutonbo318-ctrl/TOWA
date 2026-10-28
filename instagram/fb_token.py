@@ -73,6 +73,15 @@ def exchange(code):
         'fields': 'name,instagram_business_account{username}', 'access_token': tok})).get('data', [])
     ig = next((p['instagram_business_account'] for p in pages if p.get('instagram_business_account')), None)
     if not ig:
+        # ビジネス向けログインでページを選ばなかった時は、許可されたインスタのIDをトークン情報から取る
+        info = http(f'{GRAPH}/debug_token?' + urllib.parse.urlencode({
+            'input_token': tok, 'access_token': f'{APP_ID}|{secret}'})).get('data', {})
+        print('許可:', [g.get('scope') for g in info.get('granular_scopes', [])])
+        ids = [t for g in info.get('granular_scopes', []) if g.get('scope', '').startswith('instagram_')
+               for t in g.get('target_ids', [])]
+        if ids:
+            ig = http(f'{GRAPH}/{ids[0]}?' + urllib.parse.urlencode({'fields': 'id,username', 'access_token': tok}))
+    if not ig:
         sys.exit('インスタとつながったFacebookページが見つかりません（ページ: %s）' % [p.get('name') for p in pages])
     save({'token': tok, 'ig_user_id': ig['id'], 'username': ig.get('username', '')})
     print('保存しました:', ig.get('username'), '（有効期限 秒）:', long.get('expires_in'))
