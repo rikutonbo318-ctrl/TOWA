@@ -7,6 +7,7 @@ posted_at と media_id を書き込む。標準ライブラリだけで動く。
   IG_APP_SECRET   Instagram アプリシークレット（GitHub の Secrets）。token.enc の鍵にもなる
   IG_TOKEN        （任意）直接トークンを渡す場合。なければ token.enc から読む
   VIDEO_BASE_URL  動画を置いた公開URLの先頭（アップロードに失敗した時の予備）
+  FB_APP_SECRET   （任意）Facebookログイン版のトークン（fb_token.enc）があれば、リールに流行りの曲を付ける
 """
 import csv, json, os, sys, time, urllib.parse, urllib.request
 from datetime import datetime, timedelta, timezone
@@ -61,6 +62,51 @@ def create_container(uid, row, caption):
                 caption=caption, share_to_feed='true')['id']
 
 
+AUDIO_LOG = os.path.join(HERE, 'audio_used.csv')
+MUSIC_VOLUME = 70   # 流行りの曲の音量（1〜100）
+VIDEO_VOLUME = 35   # 動画に入っている自作BGM・効果音の音量（1〜100）
+
+
+def pick_music(uid):
+    """いま流行っている曲（他社アプリで使ってよい曲）から、最近使っていないものを選ぶ"""
+    used = [r['audio_id'] for r in csv.DictReader(open(AUDIO_LOG, encoding='utf-8'))][-20:] if os.path.exists(AUDIO_LOG) else []
+    items = call('GET', 'ig_audio', audio_type='music', user_id=uid).get('data', [])
+    print('流行りの曲:', [(a.get('id'), a.get('title'), a.get('artist_name') or a.get('display_artist')) for a in items[:10]])
+    for a in items:
+        if a.get('id') and a['id'] not in used:
+            return a
+    return items[0] if items else None
+
+
+def create_with_music(fb, row, caption):
+    """Facebookログイン版のAPIで、流行りの曲を付けたリールの下書きを作る"""
+    global API
+    API = 'https://graph.facebook.com/v21.0'
+    os.environ['IG_TOKEN'] = fb['token']
+    uid = fb['ig_user_id']
+    a = pick_music(uid)
+    if not a:
+        raise RuntimeError('使える曲が見つかりません')
+    url = urllib.parse.urljoin(os.environ.get('VIDEO_BASE_URL', ''), row['video'])
+    cid = call('POST', f'{uid}/media', media_type='REELS', video_url=url, caption=caption, share_to_feed='true',
+               audio_configuration=json.dumps({'audio_id': a['id'], 'audio_volume': MUSIC_VOLUME, 'video_volume': VIDEO_VOLUME}))['id']
+    new = not os.path.exists(AUDIO_LOG)
+    with open(AUDIO_LOG, 'a', encoding='utf-8', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=['date', 'video', 'audio_id', 'title', 'artist'])
+        if new:
+            w.writeheader()
+        w.writerow({'date': datetime.now(JST).strftime('%Y-%m-%d'), 'video': row['video'], 'audio_id': a['id'],
+                    'title': a.get('title', ''), 'artist': a.get('artist_name') or a.get('display_artist') or ''})
+    print('曲を付けました:', a.get('title'), a.get('id'))
+    return uid, cid
+
+
+def use_instagram_login():
+    global API
+    API = 'https://graph.instagram.com/v21.0'
+    os.environ.pop('IG_TOKEN', None)
+
+
 def create_carousel(uid, row, caption):
     """画像を | 区切りで並べた行はカルーセル（JPEG・公開URLから取り込み）"""
     base = os.environ.get('VIDEO_BASE_URL', '')
@@ -70,16 +116,22 @@ def create_carousel(uid, row, caption):
                 caption=caption)['id']
 
 
-def wait_ready(cid):
+def wait_ready(cid, soft=False):
+    """soft=True のときは失敗を RuntimeError で返す（曲なしでやり直すため）"""
+    def fail(msg):
+        if soft:
+            raise RuntimeError(msg)
+        sys.exit(msg)
+
     for _ in range(40):  # 最大10分
         s = call('GET', cid, fields='status_code,status')
         print('処理状況:', s.get('status_code'), s.get('status', ''))
         if s.get('status_code') == 'FINISHED':
             return
         if s.get('status_code') in ('ERROR', 'EXPIRED'):
-            sys.exit(f'動画の処理に失敗: {s}')
+            return fail(f'動画の処理に失敗: {s}')
         time.sleep(15)
-    sys.exit('動画の処理が10分で終わりませんでした')
+    return fail('動画の処理が10分で終わりませんでした')
 
 
 def check():
@@ -114,15 +166,27 @@ def main(dry=False):
     if dry:
         print(caption)
         return
-    uid = call('GET', 'me', fields='user_id')['user_id']
-    try:
-        if row['video'].endswith('.jpg'):
-            cid = create_carousel(uid, row, caption)
-        else:
-            cid = create_container(uid, row, caption)
-    except RuntimeError as e:
-        sys.exit(str(e))
-    wait_ready(cid)
+    import fb_token
+    fb = fb_token.load() if not row['video'].endswith('.jpg') else None
+    cid = None
+    if fb:
+        try:
+            uid, cid = create_with_music(fb, row, caption)
+            wait_ready(cid, soft=True)
+        except RuntimeError as e:
+            print('流行りの曲つきは失敗、自作BGMだけで投稿します:', e)
+            cid = None
+            use_instagram_login()
+    if not cid:
+        uid = call('GET', 'me', fields='user_id')['user_id']
+        try:
+            if row['video'].endswith('.jpg'):
+                cid = create_carousel(uid, row, caption)
+            else:
+                cid = create_container(uid, row, caption)
+        except RuntimeError as e:
+            sys.exit(str(e))
+        wait_ready(cid)
     p = call('POST', f'{uid}/media_publish', creation_id=cid)
     row['posted_at'] = now.isoformat(timespec='minutes')
     row['media_id'] = p['id']

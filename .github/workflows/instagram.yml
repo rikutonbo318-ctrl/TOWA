@@ -11,6 +11,10 @@ on:
         description: '初回だけ：ログイン後のGitHubのアドレス（code=…）を貼る'
         required: false
         default: ''
+      fbcode:
+        description: '流行り曲用：Facebookで許可した後のGitHubのアドレス（code=…）を貼る'
+        required: false
+        default: ''
       check:
         description: '公開せずに動画のアップロードだけ確かめる'
         type: boolean
@@ -34,10 +38,20 @@ jobs:
         run: |
           if [ -z "$IG_APP_SECRET" ]; then echo "IG_APP_SECRET が未設定です（Settings → Secrets → Actions）"; exit 1; fi
           if [ -n "$CODE" ]; then python ig_token.py exchange "$CODE"; else python ig_token.py refresh; fi
+      - name: 流行り曲用のトークン（Facebookログイン）
+        if: inputs.fbcode != ''
+        working-directory: instagram
+        env:
+          FB_APP_SECRET: ${{ secrets.FB_APP_SECRET }}
+          FBCODE: ${{ inputs.fbcode }}
+        run: |
+          if [ -z "$FB_APP_SECRET" ]; then echo "FB_APP_SECRET が未設定です（Settings → Secrets → Actions）"; exit 1; fi
+          python fb_token.py exchange "$FBCODE"
       - name: 投稿
         working-directory: instagram
         env:
           IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
+          FB_APP_SECRET: ${{ secrets.FB_APP_SECRET }}
           VIDEO_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/instagram/
           CHECK: ${{ inputs.check }}
         run: |
