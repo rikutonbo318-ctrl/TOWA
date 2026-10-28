@@ -2,6 +2,8 @@ name: Instagram リール投稿
 on:
   schedule:
     - cron: '30 11 * * *'   # 日本時間 20:30
+    - cron: '0 12 * * *'    # 予約が遅れて飛ばされた時の保険（日本時間 21:00）
+    - cron: '45 12 * * *'   # 同上（日本時間 21:45）
   workflow_dispatch:
     inputs:
       code:
