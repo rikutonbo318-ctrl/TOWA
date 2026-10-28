@@ -76,6 +76,10 @@ def pick_music(uid):
             break
         items = call('GET', 'ig_audio', audio_type='music', user_id=uid, search_query=q).get('data', [])
         print(f'検索「{q}」:', len(items), '曲')
+    if not items and os.environ.get('CHECK') == 'true':
+        raw = call('GET', 'ig_audio', audio_type='original_sound', user_id=uid)
+        print('確認: original_sound の件数', len(raw.get('data', [])), '| キー', list(raw.keys()))
+        print('確認: アカウント', call('GET', uid, fields='username,account_type' if False else 'username,followers_count'))
     print('流行りの曲:', [(a.get('id'), a.get('title'), a.get('artist_name') or a.get('display_artist')) for a in items[:10]])
     for a in items:
         if a.get('id') and a['id'] not in used:
