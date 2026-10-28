@@ -41,7 +41,15 @@ jobs:
           CHECK: ${{ inputs.check }}
         run: |
           if [ "$CHECK" = "true" ]; then python post_reels.py --check; else python post_reels.py; fi
+      - name: 数字を記録（再生・保存・シェアなど）
+        if: always()
+        continue-on-error: true
+        working-directory: instagram
+        env:
+          IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
+        run: python stats.py
       - name: 投稿済みとトークンを記録
+        if: always()
         run: |
           git config user.name "instagram-bot"
           git config user.email "instagram-bot@users.noreply.github.com"
