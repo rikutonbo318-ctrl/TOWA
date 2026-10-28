@@ -1,9 +1,10 @@
 name: Instagram リール投稿
 on:
   schedule:
+    - cron: '30 22 * * *'   # 日本時間 7:30（この回で数字も記録）
+    - cron: '30 3 * * *'    # 日本時間 12:30
     - cron: '30 11 * * *'   # 日本時間 20:30
-    - cron: '0 12 * * *'    # 予約が遅れて飛ばされた時の保険（日本時間 21:00）
-    - cron: '45 12 * * *'   # 同上（日本時間 21:45）
+    - cron: '40 * * * *'    # 予約が遅れて飛ばされた時の保険（予定時刻を過ぎた未投稿だけ出す）
   workflow_dispatch:
     inputs:
       code:
@@ -42,7 +43,7 @@ jobs:
         run: |
           if [ "$CHECK" = "true" ]; then python post_reels.py --check; else python post_reels.py; fi
       - name: 数字を記録（再生・保存・シェアなど）
-        if: always()
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event.schedule == '30 22 * * *')
         continue-on-error: true
         working-directory: instagram
         env:
