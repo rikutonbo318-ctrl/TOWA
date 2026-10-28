@@ -67,18 +67,29 @@ MUSIC_VOLUME = 70   # 流行りの曲の音量（1〜100）
 VIDEO_VOLUME = 35   # 動画に入っている自作BGM・効果音の音量（1〜100）
 
 
+def audio_list(r):
+    a = r.get('audio', r.get('data', []))
+    if isinstance(a, dict):
+        a = a.get('data', [])
+    for x in a:
+        x.setdefault('id', x.get('audio_id') or x.get('audio_asset_id'))
+    return a
+
+
 def pick_music(uid):
     """いま流行っている曲（他社アプリで使ってよい曲）から、最近使っていないものを選ぶ"""
     used = [r['audio_id'] for r in csv.DictReader(open(AUDIO_LOG, encoding='utf-8'))][-20:] if os.path.exists(AUDIO_LOG) else []
-    items = call('GET', 'ig_audio', audio_type='music', user_id=uid).get('data', [])
+    items = audio_list(call('GET', 'ig_audio', audio_type='music', user_id=uid))
+    if os.environ.get('CHECK') == 'true' and items:
+        print('確認: 曲データの項目', list(items[0].keys()))
     for q in ('J-POP', 'pop', 'happy', 'upbeat'):  # 流行り一覧が空の時はキーワードで探す
         if items:
             break
-        items = call('GET', 'ig_audio', audio_type='music', user_id=uid, search_query=q).get('data', [])
+        items = audio_list(call('GET', 'ig_audio', audio_type='music', user_id=uid, search_query=q))
         print(f'検索「{q}」:', len(items), '曲')
     if not items and os.environ.get('CHECK') == 'true':
         raw = call('GET', 'ig_audio', audio_type='original_sound', user_id=uid)
-        print('確認: original_sound の件数', len(raw.get('data', [])), '| キー', list(raw.keys()))
+        print('確認: original_sound', str(raw)[:300])
         print('確認: アカウント', call('GET', uid, fields='username,account_type' if False else 'username,followers_count'))
     print('流行りの曲:', [(a.get('id'), a.get('title'), a.get('artist_name') or a.get('display_artist')) for a in items[:10]])
     for a in items:
