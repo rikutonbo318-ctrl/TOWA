@@ -43,6 +43,7 @@ jobs:
         working-directory: instagram
         env:
           FB_APP_SECRET: ${{ secrets.FB_APP_SECRET }}
+          IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
           FBCODE: ${{ inputs.fbcode }}
         run: |
           if [ -z "$FB_APP_SECRET" ]; then echo "FB_APP_SECRET が未設定です（Settings → Secrets → Actions）"; exit 1; fi

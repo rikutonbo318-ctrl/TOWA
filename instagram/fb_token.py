@@ -79,6 +79,12 @@ def exchange(code):
         print('許可:', [g.get('scope') for g in info.get('granular_scopes', [])])
         ids = [t for g in info.get('granular_scopes', []) if g.get('scope', '').startswith('instagram_')
                for t in g.get('target_ids', [])]
+        if not ids and os.environ.get('IG_APP_SECRET'):
+            # 「すべてのアカウントにオプトイン」だとIDが入らないので、インスタログイン側のトークンからIDを取る
+            import ig_token
+            me = http('https://graph.instagram.com/v21.0/me?' + urllib.parse.urlencode({
+                'fields': 'user_id,username', 'access_token': ig_token.load()['token']}))
+            ids = [me['user_id']]
         if ids:
             ig = http(f'{GRAPH}/{ids[0]}?' + urllib.parse.urlencode({'fields': 'id,username', 'access_token': tok}))
     if not ig:
