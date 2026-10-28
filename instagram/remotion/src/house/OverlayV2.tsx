@@ -48,7 +48,7 @@ export const OverlayV2: React.FC<{f: number; no: number; of?: number; hook: [str
       {f < ctaAt ? <UzuGuide f={f} lines={uzu} /> : null}
       {/* save nudge */}
       <div style={{position: 'absolute', bottom: 540, width: '100%', display: 'flex', justifyContent: 'center', opacity: save, transform: `translateY(${(1 - save) * 16}px)`}}>
-        <div style={{background: 'rgba(255,255,255,0.94)', color: ink, fontFamily: FONT, fontWeight: 800, fontSize: 38, padding: '12px 28px', borderRadius: 40, border: '4px solid #e8622c'}}>保存しておくと、家づくりの時に見返せます</div>
+        <div style={{background: 'rgba(255,255,255,0.94)', color: ink, fontFamily: FONT, fontWeight: 800, fontSize: 38, padding: '12px 28px', borderRadius: 40, border: '4px solid #e8622c'}}>現場見学のチェック用に、保存しといてや</div>
       </div>
       {/* end card: next episode + note + DM */}
       <div style={{position: 'absolute', top: 250, left: 60, right: 60, opacity: cta, transform: `translateY(${(1 - cta) * 30}px)`, fontFamily: FONT, display: 'flex', flexDirection: 'column', gap: 26, alignItems: 'stretch'}}>
@@ -56,6 +56,7 @@ export const OverlayV2: React.FC<{f: number; no: number; of?: number; hook: [str
           <div style={{fontSize: 36, fontWeight: 700, color: '#ffd34d'}}>{`次回 #${no + 1}`}</div>
           <div style={{fontSize: 54, fontWeight: 900, marginTop: 4}}>{steps[steps.length - 1][2].replace(/^次は/, '')}</div>
           <div style={{fontSize: 32, fontWeight: 700, marginTop: 6, opacity: 0.85}}>フォローで続きが届きます</div>
+          <div style={{fontSize: 30, fontWeight: 800, marginTop: 10, color: '#ffd34d'}}>家を建てる友だちに送ってあげてな</div>
         </div>
       </div>
       <div style={{position: 'absolute', bottom: 520, left: 60, right: 150, opacity: cta, transform: `scale(${0.94 + 0.06 * cta})`, fontFamily: FONT, display: 'flex', flexDirection: 'column', gap: 18}}>

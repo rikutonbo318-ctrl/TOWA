@@ -118,29 +118,83 @@ const pickBone = (root: THREE.Object3D, name: string) => root.getObjectByName(na
 
 export type HumanProps = {a: Assets; x: number; y: number; h?: number; yaw: number; act: HumanAct; f: number; suit?: string; pants?: string; vest?: string; helmet?: string; phase?: number; tool?: 'hammer' | 'shovel' | 'tape'; uzu?: boolean};
 
-// 渦さん's helmet mark: a black spiral (the 渦 of 渦巻建設) on a transparent canvas
-let spiralTex: THREE.CanvasTexture | null = null;
-const spiralTexture = () => {
-  if (spiralTex) return spiralTex;
+// 渦さん's helmet logo: a dark-green hexagon with a spiral (the 渦 of 渦巻建設)
+export const DOG = {fur: '#d8a263', light: '#efd09c', ear: '#c48a4c', helmet: '#efe6d2', jacket: '#1f3b2c'};
+let logoTex: THREE.CanvasTexture | null = null;
+const logoTexture = () => {
+  if (logoTex) return logoTex;
   const cv = document.createElement('canvas');
   cv.width = cv.height = 256;
   const g = cv.getContext('2d')!;
-  g.strokeStyle = '#111';
-  g.lineWidth = 22;
+  g.fillStyle = '#efe6d2';
+  g.strokeStyle = '#1f3b2c';
+  g.lineWidth = 16;
+  g.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const t = (i / 6) * Math.PI * 2 + Math.PI / 6;
+    g.lineTo(128 + 112 * Math.cos(t), 128 + 112 * Math.sin(t));
+  }
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.lineWidth = 14;
   g.lineCap = 'round';
   g.beginPath();
-  for (let i = 0; i <= 400; i++) {
-    const t = (i / 400) * Math.PI * 5.2;
-    const r = 8 + t * 6.6;
-    const px = 128 + r * Math.cos(t);
-    const py = 128 + r * Math.sin(t);
-    if (i === 0) g.moveTo(px, py);
-    else g.lineTo(px, py);
+  for (let i = 0; i <= 300; i++) {
+    const t = (i / 300) * Math.PI * 4.2;
+    const r = 6 + t * 5.6;
+    if (i === 0) g.moveTo(128 + r * Math.cos(t), 128 + r * Math.sin(t));
+    else g.lineTo(128 + r * Math.cos(t), 128 + r * Math.sin(t));
   }
   g.stroke();
-  spiralTex = new THREE.CanvasTexture(cv);
-  spiralTex.colorSpace = THREE.SRGBColorSpace;
-  return spiralTex;
+  logoTex = new THREE.CanvasTexture(cv);
+  logoTex.colorSpace = THREE.SRGBColorSpace;
+  return logoTex;
+};
+
+// fluffy Pomeranian head (metres, +z = face forward), built from soft spheres
+const dogHead = () => {
+  const g = new THREE.Group();
+  const mat = (color: string, rough = 1) => new THREE.MeshStandardMaterial({color, roughness: rough});
+  const fur = mat(DOG.fur);
+  const light = mat(DOG.light);
+  const add = (geo: THREE.BufferGeometry, m: THREE.Material, p: [number, number, number], sc: [number, number, number] = [1, 1, 1], rz = 0) => {
+    const me = new THREE.Mesh(geo, m);
+    me.position.set(...p);
+    me.scale.set(...sc);
+    me.rotation.z = rz;
+    me.castShadow = true;
+    g.add(me);
+  };
+  // one big fluffy ball: a sphere whose vertices are pushed out in little tufts
+  const ball = new THREE.SphereGeometry(0.125, 64, 40);
+  const pos = ball.attributes.position as THREE.BufferAttribute;
+  const cols: number[] = [];
+  const cf = new THREE.Color(DOG.fur);
+  const cl = new THREE.Color(DOG.light);
+  for (let i = 0; i < pos.count; i++) {
+    const v = new THREE.Vector3().fromBufferAttribute(pos, i);
+    const n = v.clone().normalize();
+    const tuft = Math.abs(Math.sin(n.x * 37 + n.y * 11) * Math.cos(n.z * 29 - n.y * 17));
+    v.addScaledVector(n, 0.016 * tuft + (n.y < -0.2 ? 0.02 * (-n.y) : 0));
+    pos.setXYZ(i, v.x, v.y, v.z);
+    const c = cf.clone().lerp(cl, Math.min(1, Math.max(0, (n.z > 0.3 && n.y < 0.2 ? 0.8 : 0) + (n.y < -0.3 ? 0.6 : 0) + 0.25 * tuft)));
+    cols.push(c.r, c.g, c.b);
+  }
+  ball.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  ball.computeVertexNormals();
+  const bm = new THREE.Mesh(ball, new THREE.MeshStandardMaterial({vertexColors: true, roughness: 1}));
+  bm.scale.set(1.12, 0.98, 1);
+  bm.position.y = -0.02;
+  bm.castShadow = true;
+  g.add(bm);
+  for (const sx of [-1, 1]) {
+    add(new THREE.ConeGeometry(0.032, 0.07, 12), mat(DOG.ear), [sx * 0.125, 0.035, -0.005], [1, 1, 0.55], -sx * 1.05);
+    add(new THREE.SphereGeometry(0.016, 12, 10), mat('#141210', 0.15), [sx * 0.036, 0.004, 0.12]);
+  }
+  add(new THREE.SphereGeometry(0.03, 16, 12), light, [0, -0.03, 0.128], [1.1, 0.75, 0.9]);
+  add(new THREE.SphereGeometry(0.012, 12, 10), mat('#141210', 0.25), [0, -0.02, 0.156]);
+  return g;
 };
 
 export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit = '#34465e', pants = '#2c3442', vest = '#f08a24', helmet = '#f4f4f2', phase = 0, tool, uzu}) => {
@@ -157,6 +211,8 @@ export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit =
       if ((m as THREE.SkinnedMesh).isSkinnedMesh && !skin) skin = m as THREE.SkinnedMesh;
       const n = (m.material as THREE.Material).name;
       if (n === 'Wolf3D_Headwear') m.visible = false;
+      else if (uzu && ['Wolf3D_Eye', 'Wolf3D_Skin', 'Wolf3D_Teeth', 'Wolf3D_Beard'].includes(n)) m.visible = false;
+      else if (uzu && n === 'Wolf3D_Body') m.material = new THREE.MeshStandardMaterial({color: DOG.fur, roughness: 1});
       else if (n === 'Wolf3D_Outfit_Top') {
         // work jacket: the avatar's coat tails are cut off just below the waist
         const mt = new THREE.MeshStandardMaterial({color: suit, roughness: 0.92});
@@ -179,7 +235,7 @@ export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit =
     head.getWorldScale(ws);
     const k = 1 / ws.x;
     const hel = new THREE.Group();
-    const hm = new THREE.MeshStandardMaterial({color: helmet, roughness: 0.3});
+    const hm = new THREE.MeshStandardMaterial({color: uzu ? DOG.helmet : helmet, roughness: 0.3});
     const dome = new THREE.Mesh(new THREE.SphereGeometry(0.118, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), hm);
     dome.scale.set(1, 0.95, 1.12);
     const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.128, 0.13, 0.01, 32), hm);
@@ -188,20 +244,25 @@ export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit =
     dome.castShadow = brim.castShadow = true;
     hel.add(dome, brim);
     if (uzu) {
-      // spiral marks on the front and both sides of the helmet, so 渦さん reads from any camera angle
-      const dm = new THREE.MeshBasicMaterial({map: spiralTexture(), transparent: true, depthWrite: false});
-      for (const [ang, yy] of [[0, 0.045], [Math.PI / 2, 0.04], [-Math.PI / 2, 0.04]] as [number, number][]) {
-        const d = new THREE.Mesh(new THREE.CircleGeometry(0.05, 32), dm);
-        const rr = 0.121;
-        d.position.set(Math.sin(ang) * rr, yy, Math.cos(ang) * rr * 1.12);
-        d.rotation.set(-0.35, ang, 0);
-        hel.add(d);
-      }
+      // 渦さん = the Pomeranian site boss from the profile picture: fluffy head under a cream helmet with the hex logo
+      const dog = dogHead();
+      dog.scale.setScalar(k);
+      dog.position.copy(top.position).multiplyScalar(0.38);
+      dog.position.z += 0.01 * k;
+      head.add(dog);
+      hel.scale.setScalar(1.2);
+      hel.position.set(0, 0.06, 0);
+      const d = new THREE.Mesh(new THREE.CircleGeometry(0.045, 6), new THREE.MeshBasicMaterial({map: logoTexture(), transparent: true, depthWrite: false}));
+      d.position.set(0, 0.05, 0.128);
+      d.rotation.set(-0.4, 0, 0);
+      hel.add(d);
+      dog.add(hel);
+    } else {
+      hel.scale.setScalar(k);
+      hel.position.copy(top.position).multiplyScalar(0.55);
+      hel.position.z += 0.005 * k;
+      head.add(hel);
     }
-    hel.scale.setScalar(k);
-    hel.position.copy(top.position).multiplyScalar(0.55);
-    hel.position.z += 0.005 * k;
-    head.add(hel);
     spine.getWorldScale(ws);
     const kv = 1 / ws.x;
     const vm = new THREE.MeshStandardMaterial({color: vest, roughness: 0.65, side: THREE.DoubleSide});
@@ -209,13 +270,13 @@ export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit =
     v.castShadow = true;
     v.scale.set(kv * 1.16, kv, kv * 0.98);
     v.position.set(0, -0.06 * kv, 0.005 * kv);
-    spine.add(v);
+    if (!uzu) spine.add(v);
     const bm = new THREE.MeshStandardMaterial({color: '#e9eef0', roughness: 0.2, metalness: 0.4, side: THREE.DoubleSide});
     for (const yy of [-0.1, -0.17]) {
       const band = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.158, 0.025, 28, 1, true), bm);
       band.scale.set(kv * 1.17, kv, kv * 0.99);
       band.position.set(0, yy * kv, 0.005 * kv);
-      spine.add(band);
+      if (!uzu) spine.add(band);
     }
     let toolObj: THREE.Group | null = null;
     if (tool) {
