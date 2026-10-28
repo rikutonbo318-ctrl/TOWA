@@ -20,6 +20,7 @@
 ### 書き出し
 ```
 cd instagram/remotion
+[ -d node_modules ] || npm ci   # 新しい環境ではまず入れる
 HS=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
 npx remotion still src/index.ts Ep03 /tmp/check.png --frame=150 --gl=swangle --browser-executable=$HS   # まず静止画で確認
 npx remotion render src/index.ts Ep03 out/ep03.mp4 --gl=swangle --browser-executable=$HS --concurrency=4 --crf=18
@@ -37,4 +38,5 @@ cd .. && cp remotion/out/ep03.mp4 videos/reel03.mp4 && sh bgm/add_bgm.sh 1 video
 - 再生・保存・シェアは `instagram_business_manage_insights` の許可が必要。無い間はいいね・コメントのみ。
 
 ## 改善メモ（新しい順）
+- 2026-10-28 #1（音なし）：再生3699・平均視聴8.2秒/20秒・保存率0.2%。半分で離脱→最初の3秒の引きと、10秒前後に山場（渦さんの一言・変化の大きい絵）を置く。保存の声かけをもっと具体的に（「現場見学のチェック用に」）。
 - 2026-10-28 渦さん（現場監督・渦マークのヘルメット＋吹き出し）を全話に入れる。#1は渦さんなし・音なしで投稿済み。
