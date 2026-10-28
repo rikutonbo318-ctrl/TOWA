@@ -4,6 +4,8 @@ import {Ep01} from './house/Ep01';
 import {Ep02} from './house/Ep02';
 import {Ep03} from './house/Ep03';
 import {Ep04} from './house/Ep04';
+import {Ep05} from './house/Ep05';
+import {Ep06} from './house/Ep06';
 import {PreviewExt} from './house/Preview3D';
 
 // 木造の家ができるまで（全22話・施工順）。1話 = 20秒、1080x1920、30fps
@@ -13,6 +15,8 @@ export const Root: React.FC = () => (
     <Composition id="Ep02" component={Ep02} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep03" component={Ep03} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep04" component={Ep04} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="Ep05" component={Ep05} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="Ep06" component={Ep06} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="PreviewExt" component={PreviewExt} durationInFrames={1} fps={30} width={1080} height={1920} />
   </>
 );

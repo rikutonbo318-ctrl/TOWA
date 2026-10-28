@@ -1,11 +1,11 @@
 # リール制作・自動投稿の手順（代表が止めるまで毎日続ける）
 
 ## 毎日の流れ
-1. **20:30 JST** GitHub Actions（instagram.yml）が `queue.csv` の予定時刻を過ぎた未投稿を1本投稿し、
-   続けて `stats.py` で全投稿の数字を `stats.csv`・`stats_latest.md` に記録する。
+1. **7:30・12:30・20:30 JST**（2026-10-28から1日3本）GitHub Actions（instagram.yml）が `queue.csv` の予定時刻を過ぎた未投稿を1本投稿する。毎時40分にも保険で動く。
+   7:30 の回で `stats.py` が全投稿の数字を `stats.csv`・`stats_latest.md` に記録する。
 2. **毎日の制作**（Claude の定期タスク）が次をやる：
    - `stats_latest.md` を読み、伸びた回・伸びなかった回の差（冒頭の言葉、渦さんのセリフ、長さ、テーマ）を見る
-   - 予約が **3日分** 先まで埋まっているように、次の話を作る
+   - 予約が **1日3本×2日分（6本）** 先まで埋まっているように、次の話を作る
    - 作った回を書き出し → BGM → 圧縮 → `queue.csv` に追加 → push
    - 気づいたことを下の「改善メモ」に1行足す
 
@@ -24,8 +24,9 @@ cd instagram/remotion
 HS=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
 npx remotion still src/index.ts Ep03 /tmp/check.png --frame=150 --gl=swangle --browser-executable=$HS   # まず静止画で確認
 npx remotion render src/index.ts Ep03 out/ep03.mp4 --gl=swangle --browser-executable=$HS --concurrency=4 --crf=18
-cd .. && cp remotion/out/ep03.mp4 videos/reel03.mp4 && sh bgm/add_bgm.sh 1 videos/reel03.mp4 && sh bgm/compress.sh videos/reel03.mp4
+cd .. && sh make_reel.sh 03 1   # 書き出し→BGM→圧縮をまとめて（書き出し済みなら使い回す）
 ```
+- 新しい話は `src/dev.tsx` に入れて静止画を確認してから `Root.tsx` に登録する（書き出し中の Root を壊さないため）。
 - BGM は自作（`bgm/make_bgm.py`）。曲番号 1/2 を交互に。投稿後は音を変えられない。
 - `compress.sh` で 15MB 以下にする（リポジトリを重くしない）。
 
