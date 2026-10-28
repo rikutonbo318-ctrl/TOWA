@@ -71,6 +71,11 @@ def pick_music(uid):
     """いま流行っている曲（他社アプリで使ってよい曲）から、最近使っていないものを選ぶ"""
     used = [r['audio_id'] for r in csv.DictReader(open(AUDIO_LOG, encoding='utf-8'))][-20:] if os.path.exists(AUDIO_LOG) else []
     items = call('GET', 'ig_audio', audio_type='music', user_id=uid).get('data', [])
+    for q in ('J-POP', 'pop', 'happy', 'upbeat'):  # 流行り一覧が空の時はキーワードで探す
+        if items:
+            break
+        items = call('GET', 'ig_audio', audio_type='music', user_id=uid, search_query=q).get('data', [])
+        print(f'検索「{q}」:', len(items), '曲')
     print('流行りの曲:', [(a.get('id'), a.get('title'), a.get('artist_name') or a.get('display_artist')) for a in items[:10]])
     for a in items:
         if a.get('id') and a['id'] not in used:
@@ -81,7 +86,7 @@ def pick_music(uid):
 def create_with_music(fb, row, caption, log=True):
     """Facebookログイン版のAPIで、流行りの曲を付けたリールの下書きを作る"""
     global API
-    API = 'https://graph.facebook.com/v21.0'
+    API = 'https://graph.facebook.com/v22.0'
     os.environ['IG_TOKEN'] = fb['token']
     uid = fb['ig_user_id']
     a = pick_music(uid)
