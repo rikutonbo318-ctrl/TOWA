@@ -4,6 +4,8 @@ on:
     - cron: '30 22 * * *'   # 日本時間 7:30
     - cron: '30 13 * * *'   # 日本時間 22:30
     - cron: '30 3 * * *'    # 日本時間 12:30（noteの告知など）
+    - cron: '0 9 * * *'     # 日本時間 18:00（リール動画）
+    - cron: '30 11 * * *'   # 日本時間 20:30
     - cron: '15 * * * *'    # 予約が遅れて飛ばされた時の保険（予定時刻を過ぎた未投稿だけ出す）
   workflow_dispatch: {}     # 手動実行ボタン（テスト用）
 permissions:
@@ -29,5 +31,5 @@ jobs:
         run: |
           git config user.name "threads-bot"
           git config user.email "threads-bot@users.noreply.github.com"
-          git add threads/queue.csv
-          git diff --cached --quiet || (git commit -m "Threads: 投稿済みを記録" && for i in 1 2 3 4 5; do git pull --rebase -q origin main && git push && break; sleep 5; done)
+          git add -A threads/queue.csv threads/stats.csv threads/stats_latest.md 2>/dev/null || git add threads/queue.csv
+          git diff --cached --quiet || (git commit -m "Threads: 投稿済みと数字を記録" && for i in 1 2 3 4 5; do git pull --rebase -q origin main && git push && break; sleep 5; done)
