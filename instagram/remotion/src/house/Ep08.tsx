@@ -18,7 +18,7 @@ import {Frame3D, POSTS} from './Ep07';
 export type RoofFrameState = {post?: number; plate?: number; purlin?: number; rafter?: number; sheath?: number};
 const P = 0.105 / 2;
 const PLATE = 0.24; // 桁の背
-const EAVE = 0.6; // 軒の出
+export const EAVE = 0.6; // 軒の出
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
 const ease = (k: number) => 1 - (1 - k) * (1 - k);
 const drop = (i: number, n: number, p: number) => {
@@ -43,7 +43,7 @@ const RAFTER_X: number[] = [];
 for (let x = -0.3; x <= W + 0.31; x += 0.455) RAFTER_X.push(x);
 const SHEET_X: number[] = [];
 for (let x = -0.3; x < W + 0.3 - 0.01; x += M) SHEET_X.push(x);
-const rafT = (y: number) => roofH(y) + 0.045;
+export const rafT = (y: number) => roofH(y) + 0.045;
 
 export const RoofFrame3D: React.FC<{s: RoofFrameState}> = ({s}) => (
   <group>
