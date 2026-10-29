@@ -13,11 +13,11 @@ import {Fdn3D, linesUpTo, Truck3D} from './Fdn3D';
 import {Rebar3D, SLAB_TOP} from './Rebar3D';
 
 // 土台・大引・鋼製束・床下配管・床断熱・床合板
-type FloorState = {sill?: number; obiki?: number; pipe?: number; ins?: number; ply?: number};
+export type FloorState = {sill?: number; obiki?: number; pipe?: number; ins?: number; ply?: number};
 const PACK = 0.02; // 基礎パッキン
 const SILL_B = FDN_TOP + PACK;
-const SILL_T = SILL_B + SILL;
-const lumber = {color: '#d9b77e', tex: 'lumber' as const, rough: 0.8};
+export const SILL_T = SILL_B + SILL;
+export const lumber = {color: '#d9b77e', tex: 'lumber' as const, rough: 0.8};
 const OBIKI_Y = [1, 2, 3, 4, 6].map((i) => i * M);
 const PIPES: [number, number, number, number][] = [
   [1.2, 4.2, 1.2, -0.4],
@@ -26,7 +26,7 @@ const PIPES: [number, number, number, number][] = [
   [5.4, 5.6, W + 0.4, 5.6],
 ];
 
-const Floor3D: React.FC<{s: FloorState}> = ({s}) => {
+export const Floor3D: React.FC<{s: FloorState}> = ({s}) => {
   const sl = linesUpTo(s.sill ?? 0);
   const ob = s.obiki ?? 0;
   const pipe = s.pipe ?? 0;
