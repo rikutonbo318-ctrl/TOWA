@@ -210,7 +210,7 @@ export const Ep07: React.FC = () => {
       <OverlayV2
         f={f}
         no={7}
-        hook={['柱と梁が', '1日で立ち上がる']}
+        hook={['家の骨組みが立つ日', '見たことありますか？']}
         title="上棟・柱と梁"
         steps={STEPS}
         total={7}

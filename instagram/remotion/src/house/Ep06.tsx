@@ -192,7 +192,7 @@ export const Ep06: React.FC = () => {
       <OverlayV2
         f={f}
         no={6}
-        hook={['ここから先は', '大工さんの出番']}
+        hook={['家の床の下って', '見たことありますか？']}
         title="土台敷き・床"
         steps={STEPS}
         total={7}
