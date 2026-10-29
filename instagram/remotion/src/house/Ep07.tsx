@@ -16,13 +16,13 @@ import {Floor3D, lumber} from './Ep06';
 // 上棟その1：柱・梁・2階の床
 export type FrameState = {post?: number; beam?: number; joist?: number; brace?: number; ply?: number};
 const P = 0.105 / 2; // 105角
-const PLY_B = FL2 - 0.028;
-const BEAM_B = PLY_B - 0.24;
+export const PLY_B = FL2 - 0.028;
+export const BEAM_B = PLY_B - 0.24;
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
 const ease = (k: number) => 1 - (1 - k) * (1 - k);
 
 // posts: the ends of each line and every 2 grid units along it
-const POSTS: [number, number][] = (() => {
+export const POSTS: [number, number][] = (() => {
   const out: [number, number][] = [];
   const add = (x: number, y: number) => {
     if (!out.some(([a, b]) => Math.abs(a - x) < 0.05 && Math.abs(b - y) < 0.05)) out.push([x, y]);
