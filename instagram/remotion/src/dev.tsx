@@ -4,7 +4,7 @@ import {Composition, registerRoot, useCurrentFrame} from 'remotion';
 import {Scene3D} from './house/Scene3D';
 import {Person3D} from './house/Kit3D';
 import {UZU} from './house/Uzu';
-import {Ep11} from './house/Ep11';
+import {Ep10} from './house/Ep10';
 
 const DogTest: React.FC = () => {
   const f = useCurrentFrame();
@@ -17,7 +17,7 @@ const DogTest: React.FC = () => {
 };
 const Dev: React.FC = () => (
   <>
-    <Composition id="Dev" component={Ep11} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="Dev" component={Ep10} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="DogTest" component={DogTest} durationInFrames={30} fps={30} width={1080} height={1920} />
   </>
 );

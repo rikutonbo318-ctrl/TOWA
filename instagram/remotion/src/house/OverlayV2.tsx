@@ -61,8 +61,8 @@ export const OverlayV2: React.FC<{f: number; no: number; of?: number; hook: [str
       </div>
       <div style={{position: 'absolute', bottom: 520, left: 60, right: 150, opacity: cta, transform: `scale(${0.94 + 0.06 * cta})`, fontFamily: FONT, display: 'flex', flexDirection: 'column', gap: 18}}>
         <div style={{background: '#fff', borderRadius: 22, padding: '20px 28px', border: '5px solid #e8622c', boxShadow: '0 10px 30px rgba(0,0,0,0.3)'}}>
-          <div style={{fontSize: 32, fontWeight: 800, color: '#e8622c'}}>外構・リフォーム会社さんへ</div>
-          <div style={{fontSize: 46, fontWeight: 900, color: ink, marginTop: 4, lineHeight: 1.25}}>見積・契約・追加変更の書式セット</div>
+          <div style={{fontSize: 32, fontWeight: 800, color: '#e8622c'}}>これから家を建てる人へ</div>
+          <div style={{fontSize: 46, fontWeight: 900, color: ink, marginTop: 4, lineHeight: 1.25}}>全22工程の現場見学チェックリスト</div>
           <div style={{fontSize: 36, fontWeight: 800, color: ink, marginTop: 6}}>プロフィールのnoteから →</div>
         </div>
         <div style={{background: '#e8622c', color: '#fff', borderRadius: 22, padding: '16px 28px', textAlign: 'center', fontSize: 44, fontWeight: 900}}>外構のご相談はDMで</div>
