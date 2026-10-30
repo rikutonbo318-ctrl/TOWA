@@ -6,6 +6,7 @@ posted_at と post_id を書き込む。標準ライブラリだけで動く。
 - topic 列があればトピックタグを付ける（1投稿1つ）
 - reply 列があれば、公開直後に自分の投稿へ返信する（noteのリンクはここに置く）
 - 毎回、直近の投稿の数字を stats.csv / stats_latest.md に記録する
+- 毎回、自分の投稿についた返信を見て、キーワードに合うものにだけnoteの案内を返す（answered.csv に記録）
 
 必要な環境変数:
   THREADS_TOKEN   Threads の長期アクセストークン（GitHub の Secrets に入れる）
@@ -112,6 +113,62 @@ def stats(rows):
     open(LATEST, 'w', encoding='utf-8').write('\n'.join(lines) + '\n')
     print('\n'.join(lines))
 
+ANSWERED = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'answered.csv')
+NOTE_AI = 'https://note.com/uzumaki_kensetu/n/n8eb11ba8c893'
+NOTE_PERTH = 'https://note.com/uzumaki_kensetu/n/n6f8296a2097c'
+NOTE_CHECK = 'https://note.com/uzumaki_kensetu/n/n56a3485e69c9'
+# 返信の中にこの言葉があれば、対応するnoteを案内する。合わない返信には自動で返さない（機械っぽい返事は逆効果）
+KEYWORDS = [
+    (('AI', 'ＡＩ', '指示文', 'テンプレ', 'プロンプト', 'GPT', 'Claude'),
+     'ありがとうございます！AI社員7人の指示文と作り方はここにまとめています。\n' + NOTE_AI),
+    (('パース', '作り方', 'ソフト', 'CG'),
+     'ありがとうございます！パースの作り方はここにまとめています。\n' + NOTE_PERTH
+     + '\nご自宅の外構パースをご希望なら、DMで「パース」と送ってください。'),
+    (('見学', 'チェック', '工程', '建てる', '新築'),
+     'ありがとうございます！工程ごとの「現場で見るところ・聞くこと」はここにまとめています。\n' + NOTE_CHECK),
+]
+
+
+def answer_replies(rows):
+    # 直近3日の自分の投稿についた返信に、キーワードが合うものだけ1回ずつ答える
+    try:
+        me = call('GET', 'me', soft=True, fields='id,username')
+    except ApiError as e:
+        print('返信チェックをスキップ:', e)
+        return
+    done = {x[0] for x in csv.reader(open(ANSWERED, encoding='utf-8'))} if os.path.exists(ANSWERED) else set()
+    new = []
+    for r in rows:
+        if not r.get('post_id') or not r.get('posted_at'):
+            continue
+        if datetime.fromisoformat(r['posted_at']) < datetime.now(JST) - timedelta(days=3):
+            continue
+        try:
+            reps = call('GET', f"{r['post_id']}/replies", soft=True, fields='id,text,username').get('data', [])
+        except ApiError as e:
+            print('返信の取得をスキップ:', e)
+            return
+        for rep in reps:
+            if rep['id'] in done or rep.get('username') == me['username']:
+                continue
+            text = rep.get('text') or ''
+            ans = next((a for kws, a in KEYWORDS if any(k in text for k in kws)), None)
+            if ans:
+                try:
+                    c = call('POST', f"{me['id']}/threads", soft=True, media_type='TEXT', text=ans.replace('\\n', '\n'), reply_to_id=rep['id'])
+                    time.sleep(10)
+                    call('POST', f"{me['id']}/threads_publish", soft=True, creation_id=c['id'])
+                except ApiError as e:
+                    print('自動返信に失敗:', e)
+                    continue
+            new.append([rep['id'], r['post_id'], rep.get('username', ''), datetime.now(JST).isoformat(timespec='minutes'),
+                        'answered' if ans else 'seen', text.replace('\n', ' ')[:200]])
+            done.add(rep['id'])
+    if new:
+        with open(ANSWERED, 'a', encoding='utf-8', newline='') as f:
+            csv.writer(f).writerows(new)
+        print('返信チェック:', len(new), '件')
+
 
 def main(dry=False):
     rows = list(csv.DictReader(open(QUEUE, encoding='utf-8')))
@@ -123,6 +180,7 @@ def main(dry=False):
         if os.environ.get('THREADS_TOKEN') and not dry:
             print('トークン確認 OK:', call('GET', 'me', fields='username')['username'])
             stats(rows)
+            answer_replies(rows)
         print('投稿予定なし')
         return
     row = due[0]
@@ -159,6 +217,7 @@ def main(dry=False):
         w.writerows(rows)
     print('完了 post_id =', p['id'])
     stats(rows)
+    answer_replies(rows)
 
 
 if __name__ == '__main__':
