@@ -9,3 +9,4 @@
 | images/17_plan300_garden.png | 2026-10-29T23:06+09:00 | 89 | 0 | 1 | 0 | 0 | 0 |
 | images/01_ext_dusk_black.png | 2026-10-30T07:46+09:00 | 78 | 0 | 1 | 0 | 0 | 0 |
 | images/note_perth_header.png | 2026-10-28T12:51+09:00 | 50 | 0 | 0 | 0 | 0 | 0 |
+| images/18_budget_summary.png | 2026-10-30T12:51+09:00 | 0 | 0 | 1 | 0 | 0 | 0 |
