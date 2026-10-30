@@ -10,5 +10,5 @@
 | images/01_ext_dusk_black.png | 2026-10-30T07:46+09:00 | 79 | 0 | 1 | 0 | 0 | 0 |
 | images/18_budget_summary.png | 2026-10-30T12:51+09:00 | 67 | 0 | 1 | 0 | 0 | 0 |
 | images/note_perth_header.png | 2026-10-28T12:51+09:00 | 50 | 0 | 0 | 0 | 0 | 0 |
-| images/office_1.jpg | 2026-10-30T17:05+09:00 | 15 | 0 | 1 | 0 | 0 | 0 |
+| images/office_1.jpg | 2026-10-30T17:05+09:00 | 20 | 0 | 1 | 0 | 0 | 0 |
 | ../instagram/videos/reel02.mp4 | 2026-10-30T17:48+09:00 | 0 | 0 | 1 | 0 | 0 | 0 |
