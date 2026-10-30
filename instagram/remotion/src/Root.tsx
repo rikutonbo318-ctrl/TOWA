@@ -9,7 +9,9 @@ import {Ep06} from './house/Ep06';
 import {Ep07} from './house/Ep07';
 import {Ep08} from './house/Ep08';
 import {Ep09} from './house/Ep09';
+import {Ep10} from './house/Ep10';
 import {PerthBudget} from './perth/PerthBudget';
+import {PerthDayNight} from './perth/PerthDayNight';
 import {PreviewExt} from './house/Preview3D';
 
 // 木造の家ができるまで（全22話・施工順）。1話 = 20秒、1080x1920、30fps
@@ -24,7 +26,9 @@ export const Root: React.FC = () => (
     <Composition id="Ep07" component={Ep07} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep08" component={Ep08} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep09" component={Ep09} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="Ep10" component={Ep10} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="EpP1" component={PerthBudget} durationInFrames={450} fps={30} width={1080} height={1920} />
+    <Composition id="EpP2" component={PerthDayNight} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="PreviewExt" component={PreviewExt} durationInFrames={1} fps={30} width={1080} height={1920} />
   </>
 );
