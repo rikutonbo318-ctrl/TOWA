@@ -95,6 +95,12 @@ def stats(rows):
         followers = fol['data'][0].get('total_value', {}).get('value', '')
     except (ApiError, KeyError, IndexError):
         followers = ''
+    if followers != '':
+        fp = os.path.join(os.path.dirname(STATS), 'followers.csv')
+        hist = list(csv.reader(open(fp, encoding='utf-8'))) if os.path.exists(fp) else [['date', 'followers']]
+        hist = [hist[0]] + [x for x in hist[1:] if x[0] != today] + [[today, followers]]
+        with open(fp, 'w', encoding='utf-8', newline='') as f:
+            csv.writer(f).writerows(hist)
     old = list(csv.reader(open(STATS, encoding='utf-8'))) if os.path.exists(STATS) else [['date', 'post_id', 'posted_at', 'media'] + METRICS]
     keep = [old[0]] + [x for x in old[1:] if x[0] != today]
     with open(STATS, 'w', encoding='utf-8', newline='') as f:
