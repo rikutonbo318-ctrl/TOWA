@@ -7,7 +7,7 @@
 | images/15_plan100_dusk.png | 2026-10-28T07:51+09:00 | 384 | 1 | 3 | 0 | 0 | 0 |
 | images/16_plan200_dusk.png | 2026-10-28T23:02+09:00 | 274 | 1 | 0 | 0 | 0 | 0 |
 | ../instagram/videos/reel02.mp4 | 2026-10-30T17:48+09:00 | 263 | 1 | 1 | 0 | 0 | 0 |
-| images/21_interior_day.png | 2026-10-31T12:47+09:00 | 172 | 1 | 1 | 0 | 0 | 0 |
+| images/21_interior_day.png | 2026-10-31T12:47+09:00 | 176 | 1 | 1 | 0 | 0 | 0 |
 | images/06_ext_day_white.png | 2026-10-30T23:03+09:00 | 143 | 1 | 1 | 0 | 0 | 0 |
 | images/19_trend_dusk.png | 2026-10-30T20:44+09:00 | 140 | 1 | 1 | 0 | 0 | 0 |
 | images/20_interior_dusk.png | 2026-10-31T07:43+09:00 | 100 | 0 | 1 | 0 | 0 | 0 |
@@ -16,6 +16,6 @@
 | images/18_budget_summary.png | 2026-10-30T12:51+09:00 | 74 | 0 | 1 | 0 | 0 | 0 |
 | images/office_2.jpg | 2026-10-31T06:42+09:00 | 69 | 1 | 1 | 0 | 0 | 0 |
 | images/note_perth_header.png | 2026-10-28T12:51+09:00 | 50 | 0 | 0 | 0 | 0 | 0 |
+| ../instagram/videos/reel01.mp4 | 2026-10-31T17:47+09:00 | 40 | 0 | 1 | 0 | 0 | 0 |
 | images/office_1.jpg | 2026-10-30T17:05+09:00 | 39 | 0 | 1 | 0 | 0 | 0 |
-| ../instagram/videos/reel01.mp4 | 2026-10-31T17:47+09:00 | 30 | 0 | 1 | 0 | 0 | 0 |
 | images/office_2.jpg | 2026-10-31T16:55+09:00 | 5 | 0 | 1 | 0 | 0 | 0 |
