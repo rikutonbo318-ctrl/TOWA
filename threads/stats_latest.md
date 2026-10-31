@@ -13,7 +13,7 @@
 | images/20_interior_dusk.png | 2026-10-31T07:43+09:00 | 89 | 0 | 1 | 0 | 0 | 0 |
 | images/01_ext_dusk_black.png | 2026-10-30T07:46+09:00 | 81 | 0 | 1 | 0 | 0 | 0 |
 | images/18_budget_summary.png | 2026-10-30T12:51+09:00 | 73 | 0 | 1 | 0 | 0 | 0 |
-| images/office_2.jpg | 2026-10-31T06:42+09:00 | 68 | 1 | 1 | 0 | 0 | 0 |
+| images/office_2.jpg | 2026-10-31T06:42+09:00 | 69 | 1 | 1 | 0 | 0 | 0 |
 | images/note_perth_header.png | 2026-10-28T12:51+09:00 | 50 | 0 | 0 | 0 | 0 | 0 |
 | images/office_1.jpg | 2026-10-30T17:05+09:00 | 38 | 0 | 1 | 0 | 0 | 0 |
 | images/21_interior_day.png | 2026-10-31T12:47+09:00 | 0 | 0 | 1 | 0 | 0 | 0 |
