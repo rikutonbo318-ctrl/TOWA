@@ -18,3 +18,4 @@
 | images/note_perth_header.png | 2026-10-28T12:51+09:00 | 50 | 0 | 0 | 0 | 0 | 0 |
 | images/office_1.jpg | 2026-10-30T17:05+09:00 | 39 | 0 | 1 | 0 | 0 | 0 |
 | images/office_2.jpg | 2026-10-31T16:55+09:00 | 3 | 0 | 1 | 0 | 0 | 0 |
+| ../instagram/videos/reel01.mp4 | 2026-10-31T17:47+09:00 | 0 | 0 | 1 | 0 | 0 | 0 |
