@@ -11,6 +11,8 @@ import {Ep08} from './house/Ep08';
 import {Ep09} from './house/Ep09';
 import {Ep10} from './house/Ep10';
 import {Ep11} from './house/Ep11';
+import {Ep12} from './house/Ep12';
+import {Ep13} from './house/Ep13';
 import {PerthBudget} from './perth/PerthBudget';
 import {PerthDayNight} from './perth/PerthDayNight';
 import {PreviewExt} from './house/Preview3D';
@@ -29,6 +31,8 @@ export const Root: React.FC = () => (
     <Composition id="Ep09" component={Ep09} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep10" component={Ep10} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep11" component={Ep11} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="Ep12" component={Ep12} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="Ep13" component={Ep13} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="EpP1" component={PerthBudget} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="EpP2" component={PerthDayNight} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="PreviewExt" component={PreviewExt} durationInFrames={1} fps={30} width={1080} height={1920} />
