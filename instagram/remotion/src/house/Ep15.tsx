@@ -135,7 +135,7 @@ export const Ep15: React.FC = () => {
         <Hardware3D s={{brace: 0, plate: 1, hd: 1, bolt: 1}} />
         <Sash3D s={{sash1: 1, sash2: 1, tape: 1, mat: 1, top: 1, water: 0}} />
         <Skin3D s={{sheet: 1, batten: 1, side1: 1, side2: 1, gutter: 1}} />
-        <Ins3D s={{wire: 1, ins1: 1, ins2: 1, vb: 1, tape: 1}} />
+        <Ins3D s={{wire: f < 212 ? 1 : 0, ins1: 1, ins2: 1, vb: 1, tape: f < 212 ? 1 : 0}} />
         <Board3D s={{ceil, base, wall1, wall2, floor, cover}} />
         {f >= 176 && f < 205 ? <Ring3D p={[0.12, (BASE.y0 + BASE.y1) / 2, (BASE.h0 + BASE.h1) / 2]} o={ramp(f, 176, 182)} f={f} r={0.6} vertical /> : null}
         {f >= 474 && f < 500 ? <Check3D p={[3.0, 2.5, FL1 + 0.8]} o={ramp(f, 478, 484)} size={0.35} /> : null}
