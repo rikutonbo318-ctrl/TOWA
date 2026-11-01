@@ -16,6 +16,9 @@ TEXT = ('コメントありがとうございます！\n'
         'https://note.com/uzumaki_kensetu/n/n56a3485e69c9\n'
         '無料版のコンセントの回はプロフィールのnoteから読めます。')
 
+REPLY = ('コメントありがとうございます！📋 全22工程の現場見学チェックリストは、'
+         'プロフィールのリンク（note）から見られます。11/8まで500円です。')
+
 
 def main():
     rows = list(csv.DictReader(open(pr.QUEUE, encoding='utf-8')))
@@ -45,11 +48,14 @@ def main():
                         recipient=json.dumps({'comment_id': c['id']}), message=json.dumps({'text': TEXT}, ensure_ascii=False))
                 status = 'sent'
             except RuntimeError as e:
-                print('DMを送れませんでした（許可が無い可能性）:', e)
-                status = 'failed'
-            if status == 'failed':
-                stop = True  # 記録しない＝許可を直したあとに送り直す
-                break
+                print('DMを送れませんでした（許可が無い）→ コメントで返信:', e)
+                try:
+                    pr.call('POST', f"{c['id']}/replies", message=REPLY)
+                    status = 'replied'
+                except RuntimeError as e2:
+                    print('コメント返信も失敗:', e2)
+                    stop = True  # 記録しない＝次回に送り直す
+                    break
             new.append([c['id'], r['media_id'], c.get('username', ''), datetime.now(JST).isoformat(timespec='minutes'), status])
             done.add(c['id'])
     if new:
