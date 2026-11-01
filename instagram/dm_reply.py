@@ -56,6 +56,11 @@ def main():
         with open(SENT, 'a', encoding='utf-8', newline='') as f:
             csv.writer(f).writerows(new)
     print('DMチェック:', len(new), '件')
+    try:  # DMの許可があるかの確認（読むだけ）
+        pr.call('GET', 'me/conversations', platform='instagram', limit=1)
+        print('DMの許可: OK')
+    except RuntimeError as e:
+        print('DMの許可: なし', e)
 
 
 if __name__ == '__main__':
