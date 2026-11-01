@@ -26,7 +26,7 @@ const clamp = (v: number) => Math.max(0, Math.min(1, v));
 const PIECES = EXT.map(pieces);
 const boardM = {color: '#ecebe6', rough: 0.9};
 // plywood backing for a shelf on the west wall of the LDK
-const BASE = {y0: 1.6, y1: 3.1, h0: FL1 + 1.0, h1: FL1 + 1.9};
+const BASE = {y0: 3.3, y1: 4.4, h0: FL1 + 0.9, h1: FL1 + 1.8};
 
 export const Board3D: React.FC<{s: BoardState}> = ({s}) => {
   const ceil = s.ceil ?? 0;
@@ -60,8 +60,8 @@ const cam = camTrack([
   [42, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
   [56, [5.6, 4.0, FL1 + 1.7], [2.0, 2.0, FL1 + 2.0], 58],
   [118, [5.3, 3.9, FL1 + 1.7], [2.0, 2.0, FL1 + 2.0], 58],
-  [130, [2.4, 3.6, FL1 + 1.4], [0, 2.4, FL1 + 1.3], 50],
-  [198, [2.2, 3.5, FL1 + 1.4], [0, 2.4, FL1 + 1.3], 50],
+  [130, [2.6, 2.4, FL1 + 1.5], [0, 3.85, FL1 + 1.3], 50],
+  [198, [2.4, 2.5, FL1 + 1.5], [0, 3.85, FL1 + 1.3], 50],
   [210, [4.6, 3.6, 1.9], [0, 1.9, 1.5], 55],
   [296, [4.3, 3.5, 1.9], [0, 1.9, 1.5], 55],
   [308, [3.6, 3.5, FL2 + 1.7], [0, 2.2, FL2 + 1.3], 55],
@@ -106,7 +106,7 @@ export const Ep15: React.FC = () => {
   if (f >= 42 && f < 125) {
     a = {x: 3.2 + 1.2 * ceil, y: 2.4, h: FL1, yaw: 0, act: 'press'};
   } else if (f >= 125 && f < 205) {
-    a = {x: 0.7, y: 1.3, h: FL1, yaw: 180, act: 'hammer'};
+    a = {x: 0.7, y: 3.0, h: FL1, yaw: 180, act: 'hammer'};
     kan = {x: 1.3, y: 0.9, h: FL1, yaw: 150, act: f > 172 ? 'point' : 'idle'};
   } else if (f >= 205 && f < 300) {
     a = {x: 0.7, y: 0.5 + 1.0 * wall1, h: FL1, yaw: 180, act: 'press'};
