@@ -22,6 +22,7 @@ import {Ep19} from './house/Ep19';
 import {Ep20} from './house/Ep20';
 import {D1, D2, D3} from './house/Dassen';
 import {M1} from './house/M1';
+import {M2} from './house/M2';
 import {PerthBudget} from './perth/PerthBudget';
 import {PerthDayNight} from './perth/PerthDayNight';
 import {PreviewExt} from './house/Preview3D';
@@ -53,6 +54,7 @@ export const Root: React.FC = () => (
     <Composition id="D2" component={D2} durationInFrames={1050} fps={30} width={1080} height={1920} />
     <Composition id="D3" component={D3} durationInFrames={1050} fps={30} width={1080} height={1920} />
     <Composition id="M1" component={M1} durationInFrames={1200} fps={30} width={1080} height={1920} />
+    <Composition id="M2" component={M2} durationInFrames={1200} fps={30} width={1080} height={1920} />
     <Composition id="EpP1" component={PerthBudget} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="EpP2" component={PerthDayNight} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="PreviewExt" component={PreviewExt} durationInFrames={1} fps={30} width={1080} height={1920} />

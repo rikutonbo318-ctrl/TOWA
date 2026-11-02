@@ -10,7 +10,7 @@ import {Neighbour, SITE} from './Site3D';
 // slatted privacy fence + wood deck + lawn on the LDK side, planting and night lighting.
 const {x0, x1, y0, y1} = SITE;
 const ENTRY = {y0: 3.2 * M - 0.6, y1: 4.2 * M + 0.6}; // porch extent on the east side
-const PARK = {x0: 3.3, x1: 9.0, y0: y0, y1: -0.35};
+export const PARK = {x0: 3.3, x1: 9.0, y0: y0, y1: -0.35};
 const APPROACH = {x0: 9.35, x1: 10.75};
 
 const mats = {
@@ -118,7 +118,7 @@ const Bollard: React.FC<{x: number; y: number; night: boolean}> = ({x, y, night}
   </group>
 );
 
-export const Gaiko3D: React.FC<{night?: boolean; cars?: boolean}> = ({night = false, cars = false}) => {
+export const Gaiko3D: React.FC<{night?: boolean; cars?: boolean; noCarport?: boolean}> = ({night = false, cars = false, noCarport = false}) => {
   // slit concrete: slabs split by gravel joints every ~1.8 m across the parking
   const slabs: [number, number][] = [];
   for (let y = PARK.y0; y < PARK.y1 - 0.1; y += 1.5) slabs.push([y, Math.min(PARK.y1, y + 1.4)]);
@@ -159,6 +159,8 @@ export const Gaiko3D: React.FC<{night?: boolean; cars?: boolean}> = ({night = fa
       <PBox x0={10.95} x1={12.55} y0={y0 + 0.57} y1={y0 + 0.6} h0={1.42} h1={1.45} m={night ? {color: '#fff3d6', emissive: '#ffcf86', emissiveIntensity: 2} : {color: '#2b2d30'}} cast={false} />
       {night ? <pointLight position={[11.75, 1.25, -(y0 + 0.2)]} intensity={3.2} distance={3.5} color="#ffcf86" /> : null}
       {/* carport: 2-car flat roof, posts on the house side, thin dark roof */}
+      {noCarport ? null : (
+        <>
       {[PARK.x0 + 0.2, (PARK.x0 + PARK.x1) / 2, PARK.x1 - 0.2].map((px) => (
         <mesh key={'cp' + px} material={mats.alu} position={[px, 1.2, -(PARK.y1 - 0.15)]} castShadow>
           <boxGeometry args={[0.1, 2.4, 0.1]} />
@@ -170,6 +172,8 @@ export const Gaiko3D: React.FC<{night?: boolean; cars?: boolean}> = ({night = fa
       <mesh material={mats.roof} position={[(PARK.x0 + PARK.x1) / 2, 2.5, -((PARK.y1 + PARK.y0 + 0.4) / 2)]} castShadow receiveShadow>
         <boxGeometry args={[PARK.x1 - PARK.x0 + 0.1, 0.1, PARK.y1 - PARK.y0 - 0.2]} />
       </mesh>
+        </>
+      )}
       {cars ? (
         <>
           <Car x={4.85} y={-2.5} color="#e9e9e6" />

@@ -4,7 +4,7 @@
 set -e
 cd "$(dirname "$0")"
 n="$1"; song="$2"
-comp=Ep$n; case "$n" in D*) comp=$n;; esac
+comp=Ep$n; case "$n" in D*|M*) comp=$n;; esac
 HS=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
 if [ ! -s remotion/out/ep$n.mp4 ]; then
   (cd remotion && [ -d node_modules ] || npm ci)
