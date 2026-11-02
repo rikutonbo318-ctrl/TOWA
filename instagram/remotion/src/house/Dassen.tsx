@@ -5,6 +5,7 @@ import {UZU, UzuFace} from './Uzu';
 import {FL1, FL2, W} from './House';
 import {Scene3D} from './Scene3D';
 import {camTrack, Check3D, Person3D, Ring3D} from './Kit3D';
+import {PBox} from './Geo';
 import {Site3D} from './Site3D';
 import {Fdn3D} from './Fdn3D';
 import {Rebar3D} from './Rebar3D';
@@ -257,9 +258,10 @@ const RebarScene = (f: number) => (
 );
 
 const tapeCam = camTrack([
-  [300, [1.7, 1.9, FL2 + 1.5], [1.9, 0, FL2 + 1.4], 48],
-  [480, [2.3, 1.9, FL2 + 1.5], [2.1, 0, FL2 + 1.4], 48],
+  [300, [7.0, -4.4, FL1 + 1.6], [7.74, 0, FL1 + 1.2], 44],
+  [480, [8.4, -4.4, FL1 + 1.6], [7.74, 0, FL1 + 1.2], 44],
 ]);
+const tapeM = {color: '#b9bdc2', rough: 0.35};
 const TapeScene = (f: number) => (
   <>
     <Site3D f={f} s={{dig: () => 1, rope: 0, posts: 1, nuki: 1, strings: 0, pile: 0}} />
@@ -268,11 +270,16 @@ const TapeScene = (f: number) => (
     <Floor3D s={{sill: 1, obiki: 1, pipe: 1, ins: 1, ply: 1}} />
     <Frame3D s={{post: 1, beam: 1, joist: 1, brace: 0, ply: 1}} />
     <RoofFrame3D s={{post: 1, plate: 1, purlin: 1, rafter: 1, sheath: 1}} />
-    <Roof3D s={{scaf: 1, felt: 1, drip: 1, metal: 1, edge: 1, soffit: 1}} />
-    <Hardware3D s={{brace: 1, plate: 1, hd: 1, bolt: 1}} />
+    <Roof3D s={{scaf: 0, felt: 1, drip: 1, metal: 1, edge: 1, soffit: 1}} />
+    <Hardware3D s={{brace: 0, plate: 1, hd: 1, bolt: 1}} />
     <Sash3D s={{sash1: 1, sash2: 1, tape: 1, mat: 0, top: 0, water: 0}} />
-    {f >= 316 ? <Ring3D p={[2.0, 0.12, FL2 + 1.4]} o={ramp(f, 316, 322)} f={f} r={0.6} vertical /> : null}
-    {f >= 420 ? <Check3D p={[2.0, 0.3, FL2 + 2.3]} o={ramp(f, 422, 428)} size={0.35} /> : null}
+    {/* 防水テープ：下 → 左右 → 上の順に重ねて貼る */}
+    {f >= 300 ? <PBox x0={6.73} x1={8.75} y0={-0.13} y1={-0.115} h0={FL1 + 0.37} h1={FL1 + 0.45} m={tapeM} cast={false} /> : null}
+    {f >= 330 ? <PBox x0={6.73} x1={6.83} y0={-0.135} y1={-0.12} h0={FL1 + 0.37} h1={FL1 + 0.37 + 1.71 * ramp(f, 330, 350)} m={tapeM} cast={false} /> : null}
+    {f >= 330 ? <PBox x0={8.65} x1={8.75} y0={-0.135} y1={-0.12} h0={FL1 + 0.37} h1={FL1 + 0.37 + 1.71 * ramp(f, 330, 350)} m={tapeM} cast={false} /> : null}
+    {f >= 356 ? <PBox x0={6.73} x1={6.73 + 2.02 * ramp(f, 356, 376)} y0={-0.14} y1={-0.125} h0={FL1 + 2.0} h1={FL1 + 2.08} m={tapeM} cast={false} /> : null}
+    {f >= 392 ? <Ring3D p={[6.8, -0.2, FL1 + 2.0]} o={ramp(f, 392, 398)} f={f} r={0.32} vertical /> : null}
+    {f >= 420 ? <Check3D p={[7.74, -0.3, FL1 + 2.5]} o={ramp(f, 422, 428)} size={0.35} /> : null}
   </>
 );
 
