@@ -1,0 +1,21 @@
+name: 参考アカウントの調査
+on:
+  workflow_dispatch:
+    inputs:
+      user:
+        description: 'Instagramのユーザー名'
+        required: true
+jobs:
+  look:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 最近の投稿を見る
+        working-directory: instagram
+        env:
+          FB_APP_SECRET: ${{ secrets.FB_APP_SECRET }}
+          RESEARCH_USER: ${{ github.event.inputs.user }}
+        run: python research.py
