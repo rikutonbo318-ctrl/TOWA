@@ -32,8 +32,8 @@ const KY0 = 3.9;
 const KY1 = 4.55;
 const SINK = {x0: 1.35, x1: 2.15};
 const COOK = {x0: 2.95, x1: 3.55};
-const cabM = {color: '#ebe6dc', rough: 0.6};
-const topM = {color: '#d6d7d5', rough: 0.25, metal: 0.6};
+const cabM = {color: '#ebe6dc', rough: 0.6, emissive: '#1a1a1a', emissiveIntensity: 0.2};
+const topM = {color: '#cfd0cc', rough: 0.4, emissive: '#1a1a1a', emissiveIntensity: 0.2};
 
 export const Kitchen3D: React.FC<{s: KitchenState}> = ({s}) => {
   const out: React.ReactNode[] = [];
@@ -90,18 +90,18 @@ export const Kitchen3D: React.FC<{s: KitchenState}> = ({s}) => {
 const cam = camTrack([
   [0, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
   [42, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
-  [56, [3.0, 3.0, FL1 + 1.4], [1.75, 4.4, FL1 + 0.1], 52],
-  [118, [2.9, 3.1, FL1 + 1.4], [1.75, 4.4, FL1 + 0.1], 52],
+  [56, [3.3, 2.0, FL1 + 1.9], [1.75, 4.4, FL1 + 0.2], 50],
+  [118, [3.2, 2.1, FL1 + 1.9], [1.75, 4.4, FL1 + 0.2], 50],
   [130, [4.6, 1.6, FL1 + 1.7], [2.4, 4.3, FL1 + 0.6], 55],
   [198, [4.4, 1.7, FL1 + 1.7], [2.4, 4.3, FL1 + 0.6], 55],
   [210, [4.6, 1.6, FL1 + 1.9], [2.4, 4.3, FL1 + 0.8], 55],
   [296, [4.4, 1.7, FL1 + 1.9], [2.4, 4.3, FL1 + 0.8], 55],
   [308, [4.2, 1.8, FL1 + 1.5], [2.4, 4.4, FL1 + 1.7], 58],
   [366, [4.0, 1.9, FL1 + 1.5], [2.4, 4.4, FL1 + 1.7], 58],
-  [378, [2.9, 2.9, FL1 + 1.6], [1.75, 4.3, FL1 + 0.8], 52],
-  [436, [2.8, 3.0, FL1 + 1.6], [1.75, 4.3, FL1 + 0.8], 52],
-  [448, [3.2, 2.6, FL1 + 1.5], [1.9, 4.2, FL1 + 0.5], 55],
-  [496, [3.1, 2.7, FL1 + 1.5], [1.9, 4.2, FL1 + 0.5], 55],
+  [378, [3.2, 2.2, FL1 + 1.7], [1.75, 4.3, FL1 + 0.8], 50],
+  [436, [3.1, 2.3, FL1 + 1.7], [1.75, 4.3, FL1 + 0.8], 50],
+  [448, [3.4, 2.0, FL1 + 1.7], [1.9, 4.2, FL1 + 0.5], 52],
+  [496, [3.3, 2.1, FL1 + 1.7], [1.9, 4.2, FL1 + 0.5], 52],
   [510, [W + 9, -14, 16], [4.5, 3.0, 3.6], 50],
   [600, [W + 9.5, -14.5, 16.5], [4.5, 3.0, 3.6], 50],
 ]);
@@ -137,8 +137,8 @@ export const Ep19: React.FC = () => {
   let kan: Pp = {x: W + 1.6, y: -1.8, yaw: 135, act: 'idle'};
   let a: Pp | null = {x: W + 1.4, y: -2.6, yaw: 0, act: f > 30 ? 'wave' : 'idle'};
   if (f >= 42 && f < 125) {
-    kan = {x: 1.0, y: 3.6, h: FL1, yaw: 45, act: f > 70 ? 'point' : 'idle'};
-    a = {x: 2.4, y: 3.7, h: FL1, yaw: 120, act: 'measure'};
+    kan = {x: 0.7, y: 3.7, h: FL1, yaw: 30, act: f > 70 ? 'point' : 'idle'};
+    a = {x: 2.9, y: 3.9, h: FL1, yaw: 160, act: 'measure'};
   } else if (f >= 125 && f < 205) {
     a = {x: KX0 + 0.3 + 4 * UNIT * cab, y: 3.4, h: FL1, yaw: 90, act: 'press'};
   } else if (f >= 205 && f < 300) {
@@ -146,10 +146,10 @@ export const Ep19: React.FC = () => {
   } else if (f >= 300 && f < 370) {
     a = {x: 3.3, y: 3.4, h: FL1, yaw: 90, act: 'press'};
   } else if (f >= 370 && f < 440) {
-    a = {x: 2.3, y: 3.45, h: FL1, yaw: 120, act: 'hammer'};
+    a = {x: 1.0, y: 3.6, h: FL1, yaw: 60, act: 'hammer'};
   } else if (f >= 440 && f < 500) {
-    kan = {x: 2.6, y: 3.45, h: FL1, yaw: 120, act: 'measure'};
-    a = {x: 3.9, y: 3.2, h: FL1, yaw: 150, act: 'idle'};
+    kan = {x: 1.0, y: 3.55, h: FL1, yaw: 60, act: 'measure'};
+    a = {x: 3.9, y: 3.6, h: FL1, yaw: 150, act: 'idle'};
   } else if (f >= 500) {
     kan = {x: 3.8, y: -2.0, yaw: 270, act: f > 512 ? 'wave' : 'idle'};
     a = {x: 5.4, y: -2.0, yaw: 270, act: f > 516 ? 'wave' : 'idle'};
