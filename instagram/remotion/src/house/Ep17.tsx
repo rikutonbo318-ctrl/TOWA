@@ -90,7 +90,7 @@ export const Ep17: React.FC = () => {
     kan = {x: 5.9, y: 5.85, h: FL1 + RISE * 3, yaw: 90, act: 'press'};
     a = null;
   } else if (f >= 370 && f < 440) {
-    kan = {x: 0.9, y: 3.1, h: FL1, yaw: 180, act: 'measure'};
+    kan = {x: 0.6, y: 4.4, h: FL1, yaw: 180, act: 'measure'};
     a = null;
   } else if (f >= 440 && f < 500) {
     a = {x: 1.2, y: 1.7, h: FL1, yaw: 40, act: f < 486 ? 'hammer' : 'idle'};
