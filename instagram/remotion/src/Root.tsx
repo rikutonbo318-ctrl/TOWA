@@ -49,8 +49,8 @@ export const Root: React.FC = () => (
     <Composition id="Ep19" component={Ep19} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep20" component={Ep20} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="D1" component={D1} durationInFrames={600} fps={30} width={1080} height={1920} />
-    <Composition id="D2" component={D2} durationInFrames={600} fps={30} width={1080} height={1920} />
-    <Composition id="D3" component={D3} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="D2" component={D2} durationInFrames={1050} fps={30} width={1080} height={1920} />
+    <Composition id="D3" component={D3} durationInFrames={1050} fps={30} width={1080} height={1920} />
     <Composition id="EpP1" component={PerthBudget} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="EpP2" component={PerthDayNight} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="PreviewExt" component={PreviewExt} durationInFrames={1} fps={30} width={1080} height={1920} />

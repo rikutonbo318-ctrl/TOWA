@@ -91,10 +91,14 @@ const Hook: React.FC<{f: number; word: string; sub: string}> = ({f, word, sub}) 
   );
 };
 
-const Turn: React.FC<{f: number}> = ({f}) => {
-  if (f < T_TURN || f >= T_SITE) return null;
-  const o = ramp(f, T_TURN, T_TURN + 4) * (1 - ramp(f, T_SITE - 6, T_SITE));
-  const shake = f < T_TURN + 14 ? Math.sin(f * 2.3) * 14 : 0;
+type Tm = {turn: number; site: number; end: number; dur: number};
+const TM20: Tm = {turn: T_TURN, site: T_SITE, end: T_END, dur: 600};
+export const TM35: Tm = {turn: 420, site: 480, end: 870, dur: 1050};
+
+const Turn: React.FC<{f: number; tm: Tm}> = ({f, tm}) => {
+  if (f < tm.turn || f >= tm.site) return null;
+  const o = ramp(f, tm.turn, tm.turn + 4) * (1 - ramp(f, tm.site - 6, tm.site));
+  const shake = f < tm.turn + 14 ? Math.sin(f * 2.3) * 14 : 0;
   return (
     <div style={{position: 'absolute', top: 1220, width: '100%', textAlign: 'center', opacity: o, fontFamily: FONT, transform: `translateX(${shake}px) rotate(-4deg)`}}>
       <span style={{fontSize: 104, fontWeight: 900, color: '#ff5a3c', textShadow: outline(6)}}>…って、ちゃうちゃう！</span>
@@ -102,9 +106,9 @@ const Turn: React.FC<{f: number}> = ({f}) => {
   );
 };
 
-const EndCard: React.FC<{f: number; lead: string}> = ({f, lead}) => {
-  if (f < T_END) return null;
-  const o = ramp(f, T_END + 4, T_END + 16);
+const EndCard: React.FC<{f: number; lead: string; end: number}> = ({f, lead, end}) => {
+  if (f < end) return null;
+  const o = ramp(f, end + 4, end + 16);
   return (
     <div style={{position: 'absolute', left: 60, right: 60, top: 520, opacity: o, transform: `translateY(${(1 - o) * 30}px)`, fontFamily: FONT}}>
       <div style={{background: 'rgba(255,255,255,0.96)', borderRadius: 28, padding: '34px 30px', textAlign: 'center', boxShadow: '0 12px 40px rgba(0,0,0,0.35)'}}>
@@ -127,22 +131,26 @@ const Note: React.FC = () => (
 
 type SiteShot = {cam: ReturnType<typeof camTrack>; scene: (f: number) => React.ReactNode};
 
-const DassenReel: React.FC<{word: string; sub: string; prop: (f: number) => React.ReactNode; talk: Line[]; site: SiteShot; lead: string}> = ({word, sub, prop, talk, site, lead}) => {
+const DassenReel: React.FC<{word: string; sub: string; prop: (f: number) => React.ReactNode; talk: Line[]; site: SiteShot; lead: string; tm?: Tm}> = ({word, sub, prop, talk, site, lead, tm = TM20}) => {
   const f = useCurrentFrame();
-  const inSite = f >= T_SITE && f < T_END;
-  const c = inSite ? site.cam(f) : f >= T_END ? endCam(f) : homeCam(f);
-  const act = f >= T_END ? 'wave' : f >= T_TURN ? 'point' : 'idle';
-  const zoom = f >= T_TURN && f < T_TURN + 10 ? 1 + 0.06 * (1 - (f - T_TURN) / 10) : 1;
+  const inSite = f >= tm.site && f < tm.end;
+  // map this reel's timeline onto the 20-second camera / animation keys
+  const hf = f < tm.turn ? (f * 239) / (tm.turn - 1) : 240 + ((f - tm.turn) * 60) / (tm.site - tm.turn);
+  const lf = T_SITE + ((f - tm.site) * (T_END - T_SITE)) / (tm.end - tm.site);
+  const ef = T_END + ((f - tm.end) * 120) / (tm.dur - tm.end);
+  const c = inSite ? site.cam(lf) : f >= tm.end ? endCam(ef) : homeCam(hf);
+  const act = f >= tm.end ? 'wave' : f >= tm.turn ? 'point' : 'idle';
+  const zoom = f >= tm.turn && f < tm.turn + 10 ? 1 + 0.06 * (1 - (f - tm.turn) / 10) : 1;
   return (
     <AbsoluteFill style={{background: '#10161e'}}>
       <AbsoluteFill style={{transform: `scale(${zoom})`}}>
-        <Scene3D cam={c} noSite>{inSite ? site.scene(f) : <Home f={f} act={act} />}</Scene3D>
+        <Scene3D cam={c} noSite>{inSite ? site.scene(lf) : <Home f={f} act={act} />}</Scene3D>
       </AbsoluteFill>
-      {f < T_TURN ? prop(f) : null}
+      {f < tm.turn ? prop(f) : null}
       <Hook f={f} word={word} sub={sub} />
-      <Turn f={f} />
+      <Turn f={f} tm={tm} />
       <Say f={f} lines={talk} />
-      <EndCard f={f} lead={lead} />
+      <EndCard f={f} lead={lead} end={tm.end} />
       {inSite ? <Note /> : null}
     </AbsoluteFill>
   );
@@ -328,11 +336,16 @@ export const D2: React.FC = () => (
     sub="ハマってもうた"
     prop={(f) => <StickerBook f={f} />}
     talk={[
-      [96, 168, 'ぷっくりしたやつ、貼る場所めっちゃ悩むねん'],
-      [168, 238, '…でもな、家にも「貼る場所」で人生変わるとこあんねん'],
-      [306, 392, '窓のまわりのテープ。ズレてたら雨もれの入口や'],
-      [392, 478, '外壁貼ったら二度と見られへん。写真もらっとき'],
+      [96, 176, 'ぷっくりしたやつ、貼る場所めっちゃ悩むねん'],
+      [176, 256, '1回貼ったら、はがすと跡つくしな…'],
+      [256, 336, 'せやから、貼る前にどこにするか決めるんや'],
+      [336, 418, '…でもな、家にも「貼る場所」で人生変わるとこあんねん'],
+      [486, 576, '窓のまわりの防水テープ。下→横→上の順で重ねて貼る'],
+      [576, 666, '順番が逆やと、水がテープのすき間に入ってまうねん'],
+      [666, 756, 'ここがズレてたら、雨もれの入口や'],
+      [756, 866, '外壁貼ったら二度と見られへん。写真もらっとき'],
     ]}
+    tm={TM35}
     site={{cam: tapeCam, scene: TapeScene}}
     lead="窓まわりの防水テープは、外壁の前だけ"
   />
@@ -344,11 +357,16 @@ export const D3: React.FC = () => (
     sub="足りなさすぎて滅"
     prop={(f) => <Cords f={f} />}
     talk={[
-      [96, 168, 'ソファの裏もテレビの横も、全部延長コードや'],
-      [168, 238, 'なんでやねん！建てる前に言うといてや…'],
-      [306, 392, '位置を変えられる最後の日は、打ち合わせちゃう。「先行配線」の日や'],
-      [392, 478, 'この日に現場行って、家具を置く場所に立ってみ'],
+      [96, 176, 'ソファの裏もテレビの横も、全部延長コードや'],
+      [176, 256, 'スマホの充電、ベッドまで届かへんし'],
+      [256, 336, '掃除機かけるたびに、コード抜き差しや'],
+      [336, 418, 'なんでやねん！建てる前に言うといてや…'],
+      [486, 576, '位置を変えられる最後の日は、打ち合わせちゃう'],
+      [576, 666, '壁をふさぐ前の「先行配線」の日や'],
+      [666, 756, 'この日に現場行って、家具を置く場所に立ってみ'],
+      [756, 866, 'ベッドの横、テレビの裏、充電する場所。全部ここで決まるで'],
     ]}
+    tm={TM35}
     site={{cam: wireCam, scene: WireScene}}
     lead="コンセントの位置を変えられる最後の日"
   />
