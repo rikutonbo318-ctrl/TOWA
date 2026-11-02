@@ -78,8 +78,8 @@ export const Cloth3D: React.FC<{s: ClothState}> = ({s}) => {
 };
 
 const cam = camTrack([
-  [0, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
-  [42, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
+  [0, [3.5, 2.0, FL1 + 1.4], [0, 3.2, FL1 + 1.2], 56],
+  [42, [3.4, 2.0, FL1 + 1.4], [0, 3.2, FL1 + 1.2], 58],
   [56, [2.6, 2.4, FL1 + 1.5], [0, 3.85, FL1 + 1.3], 50],
   [118, [2.4, 2.5, FL1 + 1.5], [0, 3.85, FL1 + 1.3], 50],
   [130, [5.6, 4.0, FL1 + 1.7], [2.0, 2.0, FL1 + 2.0], 58],
@@ -115,9 +115,9 @@ export const Ep18: React.FC = () => {
   const c = cam(f);
 
   const putty = ramp(f, 58, 116);
-  const ceil = ramp(f, 132, 196);
-  const wall1 = ramp(f, 212, 294);
-  const accent = ramp(f, 310, 364);
+  const ceil = f < 42 ? 1 : ramp(f, 132, 196);
+  const wall1 = f < 42 ? 1 : ramp(f, 212, 294);
+  const accent = f < 42 ? 0.35 + 0.3 * ramp(f, 0, 42) : ramp(f, 310, 364);
   const wall2 = ramp(f, 380, 434);
   const lamp = f >= 446 && f < 500;
   const stamp = ramp(f, 500, 510) * (1 - ramp(f, 522, 530));
@@ -126,7 +126,9 @@ export const Ep18: React.FC = () => {
   type Pp = {x: number; y: number; h?: number; yaw: number; act: Act3};
   let kan: Pp = {x: W + 1.6, y: -1.8, yaw: 135, act: 'idle'};
   let a: Pp | null = {x: W + 1.4, y: -2.6, yaw: 0, act: f > 30 ? 'wave' : 'idle'};
-  if (f >= 42 && f < 125) {
+  if (f < 42) {
+    a = {x: 0.7, y: 1.4 + 2.6 * accent, h: FL1, yaw: 180, act: 'press'};
+  } else if (f >= 42 && f < 125) {
     a = {x: 0.7, y: 2.6 + 1.6 * putty, h: FL1, yaw: 180, act: 'press'};
   } else if (f >= 125 && f < 205) {
     a = {x: 3.2 + 1.2 * ceil, y: 2.4, h: FL1, yaw: 0, act: 'press'};

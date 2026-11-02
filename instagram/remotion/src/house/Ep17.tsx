@@ -28,8 +28,8 @@ const X0 = 5 * M;
 const X1 = 7 * M;
 
 const cam = camTrack([
-  [0, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
-  [42, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
+  [0, [2.7, 1.3, FL1 + 1.2], [1.4, 2.4, FL1], 46],
+  [42, [2.9, 1.0, FL1 + 1.5], [1.4, 2.4, FL1], 50],
   [56, [4.6, 0.2, FL1 + 2.1], [1.3, 2.6, FL1 + 0.1], 50],
   [118, [4.5, 0.3, FL1 + 2.1], [1.3, 2.6, FL1 + 0.1], 50],
   [130, [4.6, 3.6, FL1 + 1.3], [0, 1.9, FL1 + 1.0], 55],
@@ -76,7 +76,10 @@ export const Ep17: React.FC = () => {
   type Pp = {x: number; y: number; h?: number; yaw: number; act: Act3};
   let kan: Pp = {x: W + 1.6, y: -1.8, yaw: 135, act: 'idle'};
   let a: Pp | null = {x: W + 1.4, y: -2.6, yaw: 0, act: f > 30 ? 'wave' : 'idle'};
-  if (f >= 42 && f < 125) {
+  if (f < 42) {
+    kan = {x: 0.9, y: 1.7, h: FL1, yaw: 30, act: 'point'};
+    a = null;
+  } else if (f >= 42 && f < 125) {
     kan = {x: 0.9, y: 1.4 + 0.6 * ramp(f, 50, 90), h: FL1, yaw: 30, act: f < 60 ? 'walk' : 'point'};
     a = null;
   } else if (f >= 125 && f < 205) {
@@ -114,16 +117,16 @@ export const Ep17: React.FC = () => {
         <Sash3D s={{sash1: 1, sash2: 1, tape: 1, mat: 1, top: 1, water: 0}} />
         <Skin3D s={{sheet: 1, batten: 1, side1: 1, side2: 1, gutter: 1}} />
         <Ins3D s={{wire: 0, ins1: 1, ins2: 1, vb: 1, tape: 0}} />
-        <Board3D s={{ceil: 1, base: 1, wall1: 1, wall2: 1, floor: 1, cover: f < 46 ? 1 : 0}} />
+        <Board3D s={{ceil: 1, base: 1, wall1: 1, wall2: 1, floor: 1, cover: 0}} />
         <Carp3D s={{run1: 1, run2: 1, rail: 1, casing: 1, skirting: 1}} />
         {/* tape marks: stuck on while checking, peeled off after the carpenter's fix */}
-        {f >= 42
+        {f >= 0
           ? TAPES.map(([x, y, at], i) => {
-              const on = ramp(f, at, at + 6) * (1 - ramp(f, 470 + i * 10, 476 + i * 10));
+              const on = (f < 42 ? 1 : ramp(f, at, at + 6)) * (1 - ramp(f, 470 + i * 10, 476 + i * 10));
               return on > 0 ? <PBox key={i} x0={x - 0.15} x1={x + 0.15} y0={y - 0.035} y1={y + 0.035} h0={FL1 + 0.02} h1={FL1 + 0.026 + 0.002 * on} m={tapeM} cast={false} /> : null;
             })
           : null}
-        {f >= 64 && f < 120 ? <Ring3D p={[1.6, 2.2, FL1 + 0.02]} o={ramp(f, 64, 70)} f={f} r={0.35} /> : null}
+        {(f < 42 || (f >= 64 && f < 120)) ? <Ring3D p={[1.6, 2.2, FL1 + 0.02]} o={f < 42 ? 1 : ramp(f, 64, 70)} f={f} r={0.35} /> : null}
         {/* a spirit level held on the window sill */}
         {level > 0 ? <PBox x0={0.11} x1={0.16} y0={0.75} y1={1.35} h0={FL1 + 0.9} h1={FL1 + 0.95} m={{color: '#e7c23a', rough: 0.5}} /> : null}
         {f >= 176 && f < 205 ? <Check3D p={[0.3, 1.05, FL1 + 1.4]} o={ramp(f, 178, 184)} size={0.3} /> : null}
@@ -137,7 +140,7 @@ export const Ep17: React.FC = () => {
       <OverlayV2
         f={f}
         no={17}
-        hook={['大工さんの最後の検査', '見たことありますか？']}
+        hook={['床に貼った青いテープ', '何の印か知ってますか？']}
         title="木完検査"
         steps={STEPS}
         total={6}

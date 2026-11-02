@@ -27,7 +27,7 @@ export const OverlayV2: React.FC<{f: number; no: number; of?: number; hook: [str
       <div style={{position: 'absolute', top: 0, left: 0, height: 10, width: `${(f / (durationInFrames - 1)) * 100}%`, background: '#e8622c'}} />
       {/* hook */}
       <div style={{position: 'absolute', top: 330, width: '100%', textAlign: 'center', opacity: hk * hkIn, transform: `scale(${0.92 + 0.08 * hkIn})`, fontFamily: FONT}}>
-        <div style={{display: 'inline-block', background: '#e8622c', color: '#fff', fontSize: 40, fontWeight: 900, padding: '6px 22px', borderRadius: 10}}>{`渦さんと見る 家ができるまで ${no}/${of}`}</div>
+        <div style={{display: 'inline-block', background: '#e8622c', color: '#fff', fontSize: 40, fontWeight: 900, padding: '6px 22px', borderRadius: 10}}>{`現場監督・渦さんの現場チェック`}</div>
         <div style={{fontSize: 96, fontWeight: 900, color: '#fff', lineHeight: 1.2, marginTop: 26, textShadow: outline(5)}}>
           {hook[0]}
           <br />

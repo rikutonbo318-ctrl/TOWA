@@ -88,8 +88,8 @@ export const Kitchen3D: React.FC<{s: KitchenState}> = ({s}) => {
 };
 
 const cam = camTrack([
-  [0, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
-  [42, [W + 10, -15, 17], [4.5, 3.0, 3.6], 50],
+  [0, [4.6, 1.6, FL1 + 1.7], [2.4, 4.3, FL1 + 0.6], 52],
+  [42, [4.5, 1.65, FL1 + 1.7], [2.4, 4.3, FL1 + 0.6], 55],
   [56, [3.3, 2.0, FL1 + 1.9], [1.75, 4.4, FL1 + 0.2], 50],
   [118, [3.2, 2.1, FL1 + 1.9], [1.75, 4.4, FL1 + 0.2], 50],
   [130, [4.6, 1.6, FL1 + 1.7], [2.4, 4.3, FL1 + 0.6], 55],
@@ -124,8 +124,8 @@ export const Ep19: React.FC = () => {
   const f = useCurrentFrame();
   const c = cam(f);
 
-  const pipe = ramp(f, 46, 80);
-  const cab = ramp(f, 132, 196);
+  const pipe = f < 42 ? 1 : ramp(f, 46, 80);
+  const cab = f < 42 ? 0.5 + 0.5 * ramp(f, 0, 40) : ramp(f, 132, 196);
   const top = ramp(f, 214, 290);
   const hood = ramp(f, 312, 360);
   const tap = ramp(f, 382, 420);
@@ -136,7 +136,9 @@ export const Ep19: React.FC = () => {
   type Pp = {x: number; y: number; h?: number; yaw: number; act: Act3};
   let kan: Pp = {x: W + 1.6, y: -1.8, yaw: 135, act: 'idle'};
   let a: Pp | null = {x: W + 1.4, y: -2.6, yaw: 0, act: f > 30 ? 'wave' : 'idle'};
-  if (f >= 42 && f < 125) {
+  if (f < 42) {
+    a = {x: KX0 + 0.3 + 4 * UNIT * cab, y: 3.4, h: FL1, yaw: 90, act: 'press'};
+  } else if (f >= 42 && f < 125) {
     kan = {x: 0.7, y: 3.7, h: FL1, yaw: 30, act: f > 70 ? 'point' : 'idle'};
     a = {x: 2.9, y: 3.9, h: FL1, yaw: 160, act: 'measure'};
   } else if (f >= 125 && f < 205) {
