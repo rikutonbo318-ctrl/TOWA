@@ -1,0 +1,36 @@
+name: ナレーションの声を作る（VOICEVOX）
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        description: 'instagram/narration/<id>.json の id'
+        required: true
+      speaker:
+        description: 'VOICEVOX の話者番号（13=青山龍星）'
+        required: false
+        default: '13'
+permissions:
+  contents: write
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    services:
+      voicevox:
+        image: voicevox/voicevox_engine:cpu-latest
+        ports:
+          - 50021:50021
+    steps:
+      - uses: actions/checkout@v4
+      - name: エンジンの起動を待つ
+        run: for i in $(seq 1 60); do curl -sf http://localhost:50021/version && break; sleep 3; done
+      - name: 声を作る
+        env:
+          VOICEVOX_SPEAKER: ${{ github.event.inputs.speaker }}
+        run: python3 instagram/narration/tts.py "${{ github.event.inputs.id }}"
+      - name: コミット
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add instagram/remotion/public/voice/
+          git commit -m "voice: ${{ github.event.inputs.id }}" || exit 0
+          for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
