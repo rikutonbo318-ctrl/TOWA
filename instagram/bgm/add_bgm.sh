@@ -5,7 +5,13 @@ set -e
 cd "$(dirname "$0")/.."
 tmp=$(mktemp -d)
 python3 bgm/make_bgm.py "$1" "$2" "$tmp/bgm.wav"
-if ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$2" | grep -q .; then
+case "$(basename "$2")" in reelM*) narr=1;; *) narr=0;; esac
+if [ "$narr" = 1 ]; then
+  # もしも物理：ナレーションが全編に入るので、BGMは最初から最後まで小さく
+  ffmpeg -v error -y -i "$2" -i "$tmp/bgm.wav" -filter_complex \
+    "[1:a]volume=0.14[b];[0:a]volume=1.0[v];[b][v]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-1[a]" \
+    -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart "$tmp/out.mp4"
+elif ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$2" | grep -q .; then
   ffmpeg -v error -y -i "$2" -i "$tmp/bgm.wav" -filter_complex \
     "[1:a]volume=0.316:enable='between(t,0.1,3.0)'[b];[0:a]volume=1.8[v];[b][v]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-1[a]" \
     -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart "$tmp/out.mp4"
