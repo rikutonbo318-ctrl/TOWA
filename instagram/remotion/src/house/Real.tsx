@@ -116,7 +116,7 @@ export type HumanAct = 'idle' | 'walk' | 'run' | 'hammer' | 'point' | 'measure' 
 
 const pickBone = (root: THREE.Object3D, name: string) => root.getObjectByName(name) as THREE.Bone | undefined;
 
-export type HumanProps = {a: Assets; x: number; y: number; h?: number; yaw: number; act: HumanAct; f: number; suit?: string; pants?: string; vest?: string; helmet?: string; phase?: number; tool?: 'hammer' | 'shovel' | 'tape'; uzu?: boolean};
+export type HumanProps = {a: Assets; x: number; y: number; h?: number; yaw: number; act: HumanAct; f: number; suit?: string; pants?: string; vest?: string; helmet?: string; phase?: number; tool?: 'hammer' | 'shovel' | 'tape'; uzu?: boolean; casual?: boolean};
 
 // 渦さん's helmet logo: a dark-green hexagon with a spiral (the 渦 of 渦巻建設)
 export const DOG = {fur: '#d8a263', light: '#efd09c', ear: '#c48a4c', helmet: '#efe6d2', jacket: '#1f3b2c'};
@@ -197,7 +197,7 @@ const dogHead = () => {
   return g;
 };
 
-export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit = '#34465e', pants = '#2c3442', vest = '#f08a24', helmet = '#f4f4f2', phase = 0, tool, uzu}) => {
+export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit = '#34465e', pants = '#2c3442', vest = '#f08a24', helmet = '#f4f4f2', phase = 0, tool, uzu, casual}) => {
   const rig = useMemo(() => {
     const root = SkeletonUtils.clone(a.man.scene) as THREE.Object3D;
     const cutY = {value: 0.9};
@@ -261,6 +261,7 @@ export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit =
       hel.scale.setScalar(k);
       hel.position.copy(top.position).multiplyScalar(0.55);
       hel.position.z += 0.005 * k;
+      // casual = no work vest; the helmet becomes a plain cap in the given colour
       head.add(hel);
     }
     spine.getWorldScale(ws);
@@ -270,13 +271,13 @@ export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit =
     v.castShadow = true;
     v.scale.set(kv * 1.16, kv, kv * 0.98);
     v.position.set(0, -0.06 * kv, 0.005 * kv);
-    if (!uzu) spine.add(v);
+    if (!uzu && !casual) spine.add(v);
     const bm = new THREE.MeshStandardMaterial({color: '#e9eef0', roughness: 0.2, metalness: 0.4, side: THREE.DoubleSide});
     for (const yy of [-0.1, -0.17]) {
       const band = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.158, 0.025, 28, 1, true), bm);
       band.scale.set(kv * 1.17, kv, kv * 0.99);
       band.position.set(0, yy * kv, 0.005 * kv);
-      if (!uzu) spine.add(band);
+      if (!uzu && !casual) spine.add(band);
     }
     let toolObj: THREE.Group | null = null;
     if (tool) {
@@ -304,7 +305,7 @@ export const Human: React.FC<HumanProps> = ({a, x, y, h = 0, yaw, act, f, suit =
     }
     const mixer = new THREE.AnimationMixer(root);
     return {root, mixer, clips: a.manClips, toolObj, cutY};
-  }, [a, suit, pants, vest, helmet, tool, uzu]);
+  }, [a, suit, pants, vest, helmet, tool, uzu, casual]);
 
   const t = (f + phase) / 30;
   const base = act === 'walk' ? 'walk' : act === 'run' ? 'run' : 'idle';

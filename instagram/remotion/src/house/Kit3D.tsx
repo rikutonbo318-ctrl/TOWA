@@ -162,7 +162,7 @@ export const Line3D: React.FC<{a: [number, number, number]; b: [number, number, 
 };
 
 // realistic worker (rigged human with helmet & vest); same props as the old block figure
-export const Person3D: React.FC<{x: number; y: number; h?: number; yaw: number; act: Act3; f: number; suit?: string; vest?: string; helmet?: string; phase?: number; scale?: number; uzu?: boolean}> = ({suit, ...p}) => {
+export const Person3D: React.FC<{x: number; y: number; h?: number; yaw: number; act: Act3; f: number; suit?: string; vest?: string; helmet?: string; phase?: number; scale?: number; uzu?: boolean; casual?: boolean; pants?: string}> = ({suit, ...p}) => {
   const a = useAssets();
   if (!a) return null;
   return <Human a={a} {...p} suit={suit === '#2f4a78' || !suit ? '#34465e' : suit} />;

@@ -98,6 +98,13 @@ def pick_music(uid):
     return items[0] if items else None
 
 
+def audio_volumes(row, audio_id):
+    """ナレーション入りの回（もしも物理 reelM*）は、声が聞こえるように曲を小さくする"""
+    if os.path.basename(row['video']).startswith('reelM'):
+        return {'audio_id': audio_id, 'audio_volume': 12, 'video_volume': 100}
+    return {'audio_id': audio_id, 'audio_volume': MUSIC_VOLUME, 'video_volume': VIDEO_VOLUME}
+
+
 def create_with_music(fb, row, caption, log=True):
     """Facebookログイン版のAPIで、流行りの曲を付けたリールの下書きを作る"""
     global API
@@ -109,7 +116,7 @@ def create_with_music(fb, row, caption, log=True):
         raise RuntimeError('使える曲が見つかりません')
     url = urllib.parse.urljoin(os.environ.get('VIDEO_BASE_URL', ''), row['video'])
     cid = call('POST', f'{uid}/media', media_type='REELS', video_url=url, caption=caption, share_to_feed='true',
-               audio_configuration=json.dumps({'audio_id': a['id'], 'audio_volume': MUSIC_VOLUME, 'video_volume': VIDEO_VOLUME}))['id']
+               audio_configuration=json.dumps(audio_volumes(row, a['id'])))['id']
     if not log:
         print('曲を付けました（確認用）:', a.get('title'), a.get('id'))
         return uid, cid
