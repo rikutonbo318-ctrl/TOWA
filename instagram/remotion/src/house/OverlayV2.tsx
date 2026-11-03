@@ -53,7 +53,7 @@ export const OverlayV2: React.FC<{f: number; no: number; of?: number; hook: [str
       {/* end card: next episode + note + DM */}
       <div style={{position: 'absolute', top: 250, left: 60, right: 60, opacity: cta, transform: `translateY(${(1 - cta) * 30}px)`, fontFamily: FONT, display: 'flex', flexDirection: 'column', gap: 26, alignItems: 'stretch'}}>
         <div style={{background: 'rgba(16,22,30,0.9)', color: '#fff', borderRadius: 22, padding: '22px 30px', textAlign: 'center'}}>
-          <div style={{fontSize: 36, fontWeight: 700, color: '#ffd34d'}}>{`次回 #${no + 1}`}</div>
+          <div style={{fontSize: 36, fontWeight: 700, color: '#ffd34d'}}>{no >= of ? "最終回" : `次回 #${no + 1}`}</div>
           <div style={{fontSize: 54, fontWeight: 900, marginTop: 4}}>{steps[steps.length - 1][2].replace(/^次は/, '')}</div>
           <div style={{fontSize: 32, fontWeight: 700, marginTop: 6, opacity: 0.85}}>フォローで続きが届きます</div>
           <div style={{fontSize: 30, fontWeight: 800, marginTop: 10, color: '#ffd34d'}}>家を建てる友だちに送ってあげてな</div>
