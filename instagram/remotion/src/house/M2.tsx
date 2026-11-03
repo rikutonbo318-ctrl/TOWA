@@ -100,7 +100,7 @@ const Rain: React.FC<{f: number; k: number}> = ({f, k}) => {
 
 const ink = '#10161e';
 // ground cross-section of one post: depth in metres (0.5 = OK), lift = how far it is pulled up (m)
-const PostCut: React.FC<{cx: number; depth: number; lift: number; label: string; ok?: boolean; arrow?: number; slab?: number; hole?: number; conc?: number; q?: number}> = ({cx, depth, lift, label, ok, arrow = 1, slab = 0, hole = 1, conc = 1, q = 0}) => {
+export const PostCut: React.FC<{cx: number; depth: number; lift: number; label: string; ok?: boolean; arrow?: number; slab?: number; hole?: number; conc?: number; q?: number}> = ({cx, depth, lift, label, ok, arrow = 1, slab = 0, hole = 1, conc = 1, q = 0}) => {
   const S = 520; // px per metre
   const G = 560; // ground line
   const d = depth * S;

@@ -44,3 +44,13 @@ tt = t(0.06); save('tick', np.sin(2 * np.pi * 2400 * tt) * np.exp(-tt * 90))
 # hit: stamp / answer
 tt = t(0.5); save('hit', np.sin(2 * np.pi * 110 * tt) * np.exp(-tt * 8) + np.sin(2 * np.pi * 660 * tt) * np.exp(-tt * 14) * 0.4)
 print('ok')
+# wind: 4 s of gusty noise (looped under the storm)
+tt = t(4.0); g = 0.55 + 0.45 * np.sin(2 * np.pi * 0.35 * tt) * np.sin(2 * np.pi * 0.13 * tt + 1)
+save('wind', lp(rng.normal(size=tt.size), 0.02 + 0.06 * g) * g)
+# rattle: metal roof shaking
+tt = t(1.0); r = np.zeros_like(tt)
+for k in range(9):
+    s = int(R * (0.03 + 0.105 * k)); n = min(1600, tt.size - s)
+    r[s:s + n] += np.sin(2 * np.pi * 420 * tt[:n]) * np.exp(-tt[:n] * 60) + rng.normal(size=n) * 0.3 * np.exp(-tt[:n] * 80)
+save('rattle', r)
+print('ok2')
