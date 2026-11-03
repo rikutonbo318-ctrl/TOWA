@@ -20,6 +20,7 @@ import {Ep17} from './house/Ep17';
 import {Ep18} from './house/Ep18';
 import {Ep19} from './house/Ep19';
 import {Ep20} from './house/Ep20';
+import {Ep21} from './house/Ep21';
 import {D1, D2, D3} from './house/Dassen';
 import {M1} from './house/M1';
 import {M2} from './house/M2';
@@ -50,6 +51,7 @@ export const Root: React.FC = () => (
     <Composition id="Ep18" component={Ep18} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep19" component={Ep19} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="Ep20" component={Ep20} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="Ep21" component={Ep21} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="D1" component={D1} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="D2" component={D2} durationInFrames={1050} fps={30} width={1080} height={1920} />
     <Composition id="D3" component={D3} durationInFrames={1050} fps={30} width={1080} height={1920} />
