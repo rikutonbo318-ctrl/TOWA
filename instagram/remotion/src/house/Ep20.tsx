@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {FONT, ramp} from '../Mokuzou';
 import {Step} from '../Shared';
 import {OverlayV2} from './OverlayV2';
@@ -179,9 +179,6 @@ export const Ep20: React.FC = () => {
           [380, 436, 'さて、最初のトイレ、どこがダメやった？'],
         ]}
       />
-      <Sequence from={V_AT} durationInFrames={80}>
-        <Audio src={staticFile('voice/ep20.wav')} />
-      </Sequence>
       <div style={{position: 'absolute', bottom: 470, width: '100%', textAlign: 'center', opacity: sub}}>
         <span style={{fontFamily: FONT, background: 'rgba(16,22,30,0.88)', color: '#fff', fontWeight: 800, fontSize: 46, padding: '12px 30px', borderRadius: 16}}>
           <span style={{color: '#7fd49b', marginRight: 12}}>渦さん</span>
