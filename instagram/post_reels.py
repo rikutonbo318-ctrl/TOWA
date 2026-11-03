@@ -184,6 +184,10 @@ def main(dry=False):
     now = datetime.now(JST)
     due = [r for r in rows if not r['posted_at']
            and datetime.fromisoformat(r['scheduled_jst']).replace(tzinfo=JST) <= now + timedelta(minutes=20)]
+    # 動画がまだ書き出し中（ファイルが無い）の行は飛ばし、できた時点の次の回で投稿する
+    for r in [r for r in due if not all(os.path.exists(os.path.join(HERE, v)) for v in r['video'].split('|'))]:
+        print('動画がまだ無いので後回し:', r['scheduled_jst'], r['video'])
+    due = [r for r in due if all(os.path.exists(os.path.join(HERE, v)) for v in r['video'].split('|'))]
     if not due:
         # 投稿がない日もトークンが生きているか確かめる
         if not dry:
