@@ -27,7 +27,7 @@
 | ../instagram/videos/reel01.mp4 | 2026-10-31T17:47+09:00 | 77 | 0 | 1 | 0 | 0 | 0 |
 | images/18_budget_summary.png | 2026-10-30T12:51+09:00 | 76 | 0 | 1 | 0 | 0 | 0 |
 | images/office_2.jpg | 2026-10-31T06:42+09:00 | 76 | 1 | 1 | 0 | 0 | 0 |
-| images/08_ext_day_gray.png | 2026-11-04T07:49+09:00 | 68 | 1 | 1 | 0 | 0 | 0 |
+| images/08_ext_day_gray.png | 2026-11-04T07:49+09:00 | 69 | 1 | 1 | 0 | 0 | 0 |
 | images/02_ext_day_black.png | 2026-11-03T12:55+09:00 | 59 | 0 | 1 | 0 | 0 | 0 |
 | images/18_budget_summary.png | 2026-11-03T07:46+09:00 | 58 | 0 | 1 | 0 | 0 | 0 |
 | images/note_perth_header.png | 2026-10-28T12:51+09:00 | 50 | 0 | 0 | 0 | 0 | 0 |
@@ -39,3 +39,4 @@
 | images/office_3.jpg | 2026-11-01T17:00+09:00 | 2 | 0 | 1 | 0 | 0 | 0 |
 | images/office_1.jpg | 2026-11-02T17:55+09:00 | 2 | 0 | 1 | 0 | 0 | 0 |
 | images/office_2.jpg | 2026-11-03T17:21+09:00 | 0 | 0 | 1 | 0 | 0 | 0 |
+| images/04_int_day.png | 2026-11-04T12:56+09:00 | 0 | 0 | 1 | 0 | 0 | 0 |
