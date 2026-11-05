@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React from 'react';
 import * as THREE from 'three';
 import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {FONT, ramp} from '../Mokuzou';
@@ -125,10 +125,10 @@ export const M4: React.FC = () => {
   const amp = 0.06 * shake;
   const jx = Math.sin(f * 2.1) * amp + Math.sin(f * 3.7 + 1) * amp * 0.5;
   const jy = Math.sin(f * 2.7 + 2) * amp * 0.4;
-  const shear = useMemo(() => new THREE.Matrix4(), []);
   // shear the house about its base: x' = x + k * height
   const k = tilt + Math.sin(f * 2.1) * 0.006 * shake;
-  shear.set(1, k, 0, jx, 0, 1, 0, Math.abs(jy) * 0.3, 0, 0, 1, jy, 0, 0, 0, 1);
+  // a new matrix every frame: R3F only copies the matrix prop when the object changes
+  const shear = new THREE.Matrix4().set(1, k, 0, jx, 0, 1, 0, Math.abs(jy) * 0.3, 0, 0, 1, jy, 0, 0, 0, 1);
 
   const cam = camTrack([
     [0, [5.0, -16.5, 3.4], [5.0, 1.0, 3.0], 52],
