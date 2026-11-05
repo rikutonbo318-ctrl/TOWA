@@ -19,7 +19,7 @@ def main(nid):
     os.makedirs(out, exist_ok=True)
     durs = {}
     for ln in lines:
-        q = json.loads(post('audio_query', text=ln['text'], speaker=SPEAKER))
+        q = json.loads(post('audio_query', text=ln.get('yomi', ln['text']), speaker=SPEAKER))
         q['speedScale'] = ln.get('speed', SPEED)
         q['prePhonemeLength'] = 0.05
         q['postPhonemeLength'] = 0.1
