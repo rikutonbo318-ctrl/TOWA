@@ -34,7 +34,11 @@ def main():
     old = [r for r in old if r['date'] != today]  # 同じ日に2回動いたら上書き
     new = []
     for r in rows:
-        m = call('GET', r['media_id'], fields='like_count,comments_count,media_type')
+        try:
+            m = call('GET', r['media_id'], fields='like_count,comments_count,media_type')
+        except RuntimeError as e:  # アーカイブ・削除した投稿は飛ばす
+            print('取得できない投稿をスキップ:', r['video'], str(e)[:100])
+            continue
         reel = r['video'].endswith('.mp4')
         ins = insights(r['media_id'], REEL_METRICS if reel else POST_METRICS)
         new.append({'date': today, 'media_id': r['media_id'], 'video': r['video'].split('|')[0], 'posted_at': r['posted_at'],
