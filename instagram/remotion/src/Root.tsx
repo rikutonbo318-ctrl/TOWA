@@ -28,6 +28,7 @@ import {M2} from './house/M2';
 import {M1b, M1B_FRAMES} from './house/M1b';
 import {M2b, M2B_FRAMES} from './house/M2b';
 import {M3, M3_FRAMES} from './house/M3';
+import {M4, M4_FRAMES} from './house/M4';
 import {G1} from './house/G1';
 import {G2} from './house/G2';
 import {PerthBudget} from './perth/PerthBudget';
@@ -67,6 +68,7 @@ export const Root: React.FC = () => (
     <Composition id="M1b" component={M1b} durationInFrames={M1B_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="M2b" component={M2b} durationInFrames={M2B_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="M3" component={M3} durationInFrames={M3_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="M4" component={M4} durationInFrames={M4_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="G1" component={G1} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="G2" component={G2} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="EpP1" component={PerthBudget} durationInFrames={450} fps={30} width={1080} height={1920} />
