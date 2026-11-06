@@ -31,6 +31,7 @@ import {M3, M3_FRAMES} from './house/M3';
 import {M4, M4_FRAMES} from './house/M4';
 import {G1} from './house/G1';
 import {G2} from './house/G2';
+import {G3} from './house/G3';
 import {PerthBudget} from './perth/PerthBudget';
 import {PerthDayNight} from './perth/PerthDayNight';
 import {PreviewExt} from './house/Preview3D';
@@ -71,6 +72,7 @@ export const Root: React.FC = () => (
     <Composition id="M4" component={M4} durationInFrames={M4_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="G1" component={G1} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="G2" component={G2} durationInFrames={600} fps={30} width={1080} height={1920} />
+    <Composition id="G3" component={G3} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="EpP1" component={PerthBudget} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="EpP2" component={PerthDayNight} durationInFrames={450} fps={30} width={1080} height={1920} />
     <Composition id="PreviewExt" component={PreviewExt} durationInFrames={1} fps={30} width={1080} height={1920} />
