@@ -21,7 +21,7 @@
 | ../instagram/videos/reel03.mp4 | 2026-11-01T17:42+09:00 | 151 | 0 | 1 | 0 | 0 | 0 |
 | images/07_ext_dusk_white.png | 2026-11-02T12:58+09:00 | 139 | 0 | 1 | 0 | 0 | 0 |
 | images/20_interior_dusk.png | 2026-10-31T07:43+09:00 | 127 | 0 | 1 | 0 | 0 | 0 |
-| images/22_garden_day.png | 2026-10-31T22:48+09:00 | 110 | 0 | 1 | 0 | 0 | 0 |
+| images/22_garden_day.png | 2026-10-31T22:48+09:00 | 111 | 0 | 1 | 0 | 0 | 0 |
 | images/05_approach_dusk.png | 2026-11-01T12:53+09:00 | 105 | 0 | 1 | 0 | 0 | 0 |
 | images/17_plan300_garden.png | 2026-10-29T23:06+09:00 | 101 | 0 | 1 | 0 | 0 | 0 |
 | images/12_int_kitchen.png | 2026-11-02T07:40+09:00 | 97 | 0 | 1 | 0 | 0 | 0 |
