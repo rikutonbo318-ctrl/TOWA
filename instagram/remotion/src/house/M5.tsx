@@ -210,8 +210,8 @@ export const M5: React.FC = () => {
             <div style={{display: 'flex', justifyContent: 'center', marginBottom: 14}}>
               <UzuFace size={150} nod={Math.abs(Math.sin(f / 6))} />
             </div>
-            <div style={{fontSize: 40, fontWeight: 800, color: '#e8622c'}}>水の流れる向きは、打つ前の日に確認</div>
-            <div style={{fontSize: 54, fontWeight: 900, color: ink, marginTop: 8, lineHeight: 1.3}}>「チェック」とコメントで<br />見に行く日のリスト送るで</div>
+            <div style={{fontSize: 40, fontWeight: 800, color: '#e8622c'}}>続き：水の流れの確かめ方と、見に行く日</div>
+            <div style={{fontSize: 54, fontWeight: 900, color: ink, marginTop: 8, lineHeight: 1.3}}>コメントで「チェック」って<br />送ってな</div>
             <div style={{fontSize: 40, fontWeight: 800, color: ink, marginTop: 16}}>駐車場・外構の相談はDMで</div>
           </div>
         </div>
