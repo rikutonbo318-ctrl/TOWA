@@ -90,7 +90,7 @@ const Carport: React.FC<{f: number; tilt: number; panelsGone: number; lift: numb
   );
 };
 
-const Rain: React.FC<{f: number; k: number; slant: number}> = ({f, k, slant}) => {
+export const Rain: React.FC<{f: number; k: number; slant: number}> = ({f, k, slant}) => {
   if (k <= 0) return null;
   return (
     <AbsoluteFill style={{pointerEvents: 'none'}}>
