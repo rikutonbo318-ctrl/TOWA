@@ -43,12 +43,17 @@ def call(method, path, **params):
     return request(urllib.request.Request(url, data=data.encode(), method='POST'))
 
 
+def trial(row):
+    """queue.csv の trial 列が 1 ならお試しリール（フォロワー以外にだけ先に見せ、伸びたら自動でフォロワーにも出す）"""
+    return {'trial_params': json.dumps({'graduation_strategy': 'SS_PERFORMANCE'})} if row.get('trial') == '1' else {}
+
+
 def create_container(uid, row, caption):
     """まず動画ファイルを直接アップロードし、だめなら公開URLから取り込ませる"""
     path = os.path.join(HERE, row['video'])
     try:
         c = call('POST', f'{uid}/media', media_type='REELS', upload_type='resumable',
-                 caption=caption, share_to_feed='true')
+                 caption=caption, share_to_feed='true', **trial(row))
         body = open(path, 'rb').read()
         req = urllib.request.Request(f"{RUPLOAD}/{c['id']}", data=body, method='POST', headers={
             'Authorization': f"OAuth {token()}",
@@ -59,7 +64,7 @@ def create_container(uid, row, caption):
         print('直接アップロードに失敗、URL取り込みに切り替え:', e)
     url = urllib.parse.urljoin(os.environ.get('VIDEO_BASE_URL', ''), row['video'])
     return call('POST', f'{uid}/media', media_type='REELS', video_url=url,
-                caption=caption, share_to_feed='true')['id']
+                caption=caption, share_to_feed='true', **trial(row))['id']
 
 
 AUDIO_LOG = os.path.join(HERE, 'audio_used.csv')
@@ -116,7 +121,7 @@ def create_with_music(fb, row, caption, log=True):
         raise RuntimeError('使える曲が見つかりません')
     url = urllib.parse.urljoin(os.environ.get('VIDEO_BASE_URL', ''), row['video'])
     cid = call('POST', f'{uid}/media', media_type='REELS', video_url=url, caption=caption, share_to_feed='true',
-               audio_configuration=json.dumps(audio_volumes(row, a['id'])))['id']
+               audio_configuration=json.dumps(audio_volumes(row, a['id'])), **trial(row))['id']
     if not log:
         print('曲を付けました（確認用）:', a.get('title'), a.get('id'))
         return uid, cid
@@ -162,6 +167,19 @@ def wait_ready(cid, soft=False):
             return fail(f'動画の処理に失敗: {s}')
         time.sleep(15)
     return fail('動画の処理が10分で終わりませんでした')
+
+
+def share_story(uid, row):
+    """本番のリールはストーリーズにも載せて、フォロワーに出してすぐ届ける（失敗しても投稿は成功のまま）"""
+    if row.get('trial') == '1' or row['video'].endswith('.jpg') or not os.environ.get('VIDEO_BASE_URL'):
+        return
+    try:
+        url = urllib.parse.urljoin(os.environ['VIDEO_BASE_URL'], row['video'])
+        sid = call('POST', f'{uid}/media', media_type='STORIES', video_url=url)['id']
+        wait_ready(sid, soft=True)
+        print('ストーリーズにも投稿:', call('POST', f'{uid}/media_publish', creation_id=sid)['id'])
+    except (RuntimeError, KeyError) as e:
+        print('ストーリーズには載せられませんでした:', e)
 
 
 def check():
@@ -236,6 +254,7 @@ def main(dry=False):
         w.writeheader()
         w.writerows(rows)
     print('完了 media_id =', p['id'])
+    share_story(uid, row)
     if row['comment']:
         try:
             call('POST', f"{p['id']}/comments", message=row['comment'])
