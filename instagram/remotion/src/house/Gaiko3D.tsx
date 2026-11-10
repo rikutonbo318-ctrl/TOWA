@@ -29,7 +29,7 @@ const carMat = (c: string) => new THREE.MeshPhysicalMaterial({color: c, roughnes
 const glassMat = new THREE.MeshPhysicalMaterial({color: '#141a1f', roughness: 0.03, metalness: 0.3});
 const tireMat = new THREE.MeshStandardMaterial({color: '#1a1a1b', roughness: 0.9});
 const rimMat = new THREE.MeshStandardMaterial({color: '#c3c7cb', roughness: 0.25, metalness: 0.9});
-const Car: React.FC<{x: number; y: number; color: string}> = ({x, y, color}) => {
+export const Car: React.FC<{x: number; y: number; color: string}> = ({x, y, color}) => {
   const body = useMemo(() => new RoundedBoxGeometry(1.7, 0.62, 4.3, 5, 0.22), []);
   const cabin = useMemo(() => new RoundedBoxGeometry(1.5, 0.55, 2.3, 5, 0.2), []);
   const m = useMemo(() => carMat(color), [color]);
@@ -118,7 +118,7 @@ const Bollard: React.FC<{x: number; y: number; night: boolean}> = ({x, y, night}
   </group>
 );
 
-export const Gaiko3D: React.FC<{night?: boolean; cars?: boolean; noCarport?: boolean}> = ({night = false, cars = false, noCarport = false}) => {
+export const Gaiko3D: React.FC<{night?: boolean; cars?: boolean; noCarport?: boolean; noFence?: boolean; noDeck?: boolean}> = ({night = false, cars = false, noCarport = false, noFence = false, noDeck = false}) => {
   // slit concrete: slabs split by gravel joints every ~1.8 m across the parking
   const slabs: [number, number][] = [];
   for (let y = PARK.y0; y < PARK.y1 - 0.1; y += 1.5) slabs.push([y, Math.min(PARK.y1, y + 1.4)]);
@@ -183,11 +183,17 @@ export const Gaiko3D: React.FC<{night?: boolean; cars?: boolean; noCarport?: boo
 
       {/* LDK garden on the west: lawn, wood deck off the sweep windows, slatted privacy fence */}
       <PBox x0={x0} x1={PARK.x0 - 0.1} y0={y0} y1={-0.1} h0={0} h1={0.02} m={{color: '#9bb47a', rough: 1}} />
+      {noDeck ? null : (
+        <>
       <PBox x0={0.2} x1={3.0} y0={-1.8} y1={-0.08} h0={0.3} h1={0.36} m={{color: '#8a6a50', tex: 'lumber', rough: 0.7}} />
       {Array.from({length: 14}).map((_, i) => (
         <PBox key={'dk' + i} x0={0.2} x1={3.0} y0={-1.8 + i * 0.123} y1={-1.8 + i * 0.123 + 0.006} h0={0.36} h1={0.361} m={{color: '#3a2c20'}} cast={false} />
       ))}
       <PBox x0={0.2} x1={3.0} y0={-1.8} y1={-0.08} h0={0} h1={0.3} m={{color: '#5d4636', rough: 0.8}} />
+        </>
+      )}
+      {noFence ? null : (
+        <>
       {Array.from({length: 13}).map((_, i) => (
         <mesh key={'fs' + i} material={mats.slat} position={[(x0 + PARK.x0 - 0.3) / 2, 0.25 + i * 0.12, -(y0 + 0.15)]} castShadow receiveShadow>
           <boxGeometry args={[PARK.x0 - 0.3 - x0, 0.09, 0.02]} />
@@ -198,6 +204,8 @@ export const Gaiko3D: React.FC<{night?: boolean; cars?: boolean; noCarport?: boo
           <boxGeometry args={[0.07, 1.9, 0.07]} />
         </mesh>
       ))}
+        </>
+      )}
       {/* planting */}
       <Tree x={12.4} y={y0 + 1.7} />
       <Tree x={-2.4} y={-3.4} s={0.85} />
