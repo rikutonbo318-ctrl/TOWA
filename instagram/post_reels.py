@@ -226,7 +226,8 @@ def main(dry=False):
         print(caption)
         return
     import fb_token
-    fb = fb_token.load() if not row['video'].endswith('.jpg') else None
+    # みんなで建てる家は自作のBGMと効果音で完結しているので、流行りの曲は付けない
+    fb = fb_token.load() if not row['video'].endswith('.jpg') and not os.path.basename(row['video']).startswith('minnade') else None
     cid = None
     if fb:
         try:

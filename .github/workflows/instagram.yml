@@ -65,6 +65,13 @@ jobs:
         env:
           IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
         run: python dm_reply.py
+      - name: みんなで建てる家の投票を数える（日本時間16時台に1日1回）
+        if: always()
+        continue-on-error: true
+        working-directory: instagram
+        env:
+          IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
+        run: python count_votes.py
       - name: 数字を記録（再生・保存・シェアなど）
         if: always() && (github.event_name == 'workflow_dispatch' || github.event.schedule == '30 22 * * *')
         continue-on-error: true
