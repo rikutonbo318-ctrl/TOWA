@@ -89,7 +89,7 @@ export const M13: React.FC = () => {
   const label = f < at('02') || calm ? '' : f < at('03') ? '1年' : f < at('05') ? '3年' : '10年';
   const s = calm ? 0.55 : 0.55 + (yr <= 3 ? (yr / 3) * 0.45 : 0.45 + ((yr - 3) / 7) * 0.9);
   const rootK = f >= at('04') && f < at('05') ? ramp(f, at('04'), at('04') + 40) : f >= at('07') && f < at('08') ? 1 : 0;
-  const rootLen = f >= at('07') ? 1 : rootK;
+  const rootLen = f >= at('07') && !calm ? 1 : rootK;
   const lift = !calm && f >= at('07') ? ramp(f, at('07') + 10, at('07') + 40) : f < at('02') ? 1 : 0;
   const leaves = !calm && f >= at('06') && f < at('08');
   const cam = camTrack([
