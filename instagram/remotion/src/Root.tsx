@@ -41,6 +41,8 @@ import {M13, M13_FRAMES} from './house/M13';
 import {M14, M14_FRAMES} from './house/M14';
 import {M15, M15_FRAMES} from './house/M15';
 import {M16, M16_FRAMES} from './house/M16';
+import {M17, M17_FRAMES} from './house/M17';
+import {M18, M18_FRAMES} from './house/M18';
 import {G1} from './house/G1';
 import {G2} from './house/G2';
 import {G3} from './house/G3';
@@ -95,6 +97,8 @@ export const Root: React.FC = () => (
     <Composition id="M14" component={M14} durationInFrames={M14_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="M15" component={M15} durationInFrames={M15_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="M16" component={M16} durationInFrames={M16_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="M17" component={M17} durationInFrames={M17_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="M18" component={M18} durationInFrames={M18_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="G1" component={G1} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="G2" component={G2} durationInFrames={600} fps={30} width={1080} height={1920} />
     <Composition id="G3" component={G3} durationInFrames={600} fps={30} width={1080} height={1920} />
