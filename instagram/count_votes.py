@@ -1,4 +1,4 @@
-"""「みんなで建てる家」の投票を数える（GitHub Actions の毎時の回から、日本時間16時台に1日1回だけ動く）
+"""「みんなで建てる家」の投票を数える（GitHub Actions の毎時の回から、日本時間16〜18時台に1日1回だけ動く。集計済みなら何もしない）
 
 queue.csv で投稿済みの最新の videos/minnade*.mp4 のコメントを読み、
 1人1票（その人の最初の A / B）で数えて minnade_votes.md に1行追記する。
@@ -19,7 +19,7 @@ def vote(text):
 
 def main(force=False):
     now = datetime.now(pr.JST)
-    if not force and now.hour != 16:
+    if not force and not (16 <= now.hour < 19):  # 16〜18時台（Actionsの毎時実行が飛ばされても拾えるように。19時の新しい回より前）
         return
     rows = [r for r in csv.DictReader(open(pr.QUEUE, encoding='utf-8'))
             if os.path.basename(r['video']).startswith('minnade') and r['media_id']]
